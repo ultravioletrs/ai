@@ -1,0 +1,12 @@
+[package]
+name = "addition"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["burn/dataset", "burn/sqlite-bundled"]
+ndarray = ["burn/ndarray"]
+wgpu = ["burn/wgpu"]
+
+[dependencies]
+burn = { version = "0.13.2", features = ["ndarray", "wgpu"] }

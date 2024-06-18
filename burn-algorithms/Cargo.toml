@@ -1,0 +1,4 @@
+[workspace]
+
+members = ["addition", "regression", "mnist"]
+resolver = "2"

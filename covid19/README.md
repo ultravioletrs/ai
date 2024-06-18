@@ -1,19 +1,31 @@
-## divide_save_data.py
-This repository contains a PyTorch machine learning model for detecting COVID-19 based on chest X-ray images.
+## COVID-19
+PyTorch-based ML model for detecting COVID-19 based on chest X-ray images.
 The model classifies images into three categories: Normal, Viral Pneumonia, and COVID-19.
-To download dataset first you have to sign in Keggle. https://www.kaggle.com/
-Then follow this documentation. https://github.com/Kaggle/kaggle-api
-Go to settings and download API key. Copy it into .keggle folder.
-Run divide_save_data.py
-There are now 3 datasets, named Hospital_1, Hospital_2, Hospital_3
 
-## covid19.py
-covid19.py trains the the model and produces model. 
-run it like this:
-`python covid19.py Hospital_1 Hospital_2 Hospital_3 --model model.pth`
-in this example dataset is Hospital_1, Hospital_2, and Hospital_3 and it produces model.pth
+### Install
+- Fetch the data from Kaggle - [COVID-19 Radiography Database](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) dataset
+- You will get `archive.zip` in the folder
 
-## predict.py
-now that you have model.pth, run predict.py like this:
-`python predict.py --model model.pth --image Hospital_2/COVID/images/COVID-3.png`
-in this example you have trained model (model.pth) that runs tests on images (this example is image from Hospital_2 in COVID/images/COVID-3.png)
+Run:
+```bash
+python tools/prepare_datasets.py archive.zip -d data
+```
+
+This will create `data` directory with datasets divided in 3 hospitals (`h1`, `h2` and `h3`) plus additionally a `test` dataset, which will be used to test the produced model.
+
+
+### Train Model
+`covid19.py` is a model that needs to be trained.
+
+Do do the training, execute:
+
+```bash
+python covid19.py h1 h2 h3 --model model.pth
+```
+
+### Test Model
+Inference can be done using `predict.py`:
+
+```bash
+python predict.py --model model.pth --image test/COVID/COVID-3.png
+```

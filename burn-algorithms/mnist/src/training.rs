@@ -42,7 +42,6 @@ fn create_artifact_dir(artifact_dir: &str) {
 
 pub fn run<B: AutodiffBackend>(device: B::Device) {
     create_artifact_dir(ARTIFACT_DIR);
-    // Config
     let config_optimizer = AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5)));
     let config = MnistTrainingConfig::new(config_optimizer);
     B::seed(config.seed);
@@ -90,7 +89,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
 
     config
         .save(format!("{ARTIFACT_DIR}/config.json").as_str())
-        .unwrap();
+        .expect("Config should be saved successfully");
 
     model_trained
         .save_file(

@@ -13,7 +13,7 @@ use burn::{
     },
 };
 
-static ARTIFACT_DIR: &str = "artifacts/";
+static ARTIFACT_DIR: &str = "regression/artifacts/";
 
 #[derive(Config)]
 pub struct ExpConfig {

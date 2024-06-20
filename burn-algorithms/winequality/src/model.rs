@@ -1,8 +1,8 @@
-use crate::dataset::DiabetesBatch;
+use crate::data::DiabetesBatch;
 use burn::{
     nn::{
         loss::{MseLoss, Reduction::Mean},
-        Linear, LinearConfig, Relu,
+        Linear, LinearConfig,
     },
     prelude::*,
     tensor::backend::AutodiffBackend,
@@ -12,41 +12,27 @@ use burn::{
 #[derive(Module, Debug)]
 pub struct RegressionModel<B: Backend> {
     input_layer: Linear<B>,
-    output_layer: Linear<B>,
-    activation: Relu,
 }
 
 #[derive(Config)]
 pub struct RegressionModelConfig {
     pub num_features: usize,
-
-    #[config(default = 64)]
-    pub hidden_size: usize,
 }
 
 impl RegressionModelConfig {
     pub fn init<B: Backend>(&self, device: &B::Device) -> RegressionModel<B> {
-        let input_layer = LinearConfig::new(self.num_features, self.hidden_size)
-            .with_bias(true)
-            .init(device);
-        let output_layer = LinearConfig::new(self.hidden_size, 1)
+        let input_layer = LinearConfig::new(self.num_features, 1)
             .with_bias(true)
             .init(device);
 
-        RegressionModel {
-            input_layer,
-            output_layer,
-            activation: Relu::new(),
-        }
+        RegressionModel { input_layer }
     }
 }
 
 impl<B: Backend> RegressionModel<B> {
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
         let x = input.detach();
-        let x = self.input_layer.forward(x);
-        let x = self.activation.forward(x);
-        self.output_layer.forward(x)
+        self.input_layer.forward(x)
     }
 
     pub fn forward_step(&self, item: DiabetesBatch<B>) -> RegressionOutput<B> {

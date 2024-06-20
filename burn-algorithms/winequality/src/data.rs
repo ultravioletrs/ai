@@ -11,49 +11,41 @@ use burn::{
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct DiabetesItem {
-    /// Age in years
-    #[serde(rename = "AGE")]
-    pub age: u8,
+    #[serde(rename = "fixed acidity")]
+    pub fixed_acidity: f64,
 
-    /// Sex categorical label
-    #[serde(rename = "SEX")]
-    pub sex: u8,
+    #[serde(rename = "volatile acidity")]
+    pub volatile_acidity: f64,
 
-    /// Body mass index
-    #[serde(rename = "BMI")]
-    pub bmi: f32,
+    #[serde(rename = "citric acid")]
+    pub citric_acid: f64,
 
-    /// Average blood pressure
-    #[serde(rename = "BP")]
-    pub bp: f32,
+    #[serde(rename = "residual sugar")]
+    pub residual_sugar: f64,
 
-    /// S1: total serum cholesterol
-    #[serde(rename = "S1")]
-    pub tc: u16,
+    #[serde(rename = "chlorides")]
+    pub chlorides: f64,
 
-    /// S2: low-density lipoproteins
-    #[serde(rename = "S2")]
-    pub ldl: f32,
+    #[serde(rename = "free sulfur dioxide")]
+    pub free_sulfur_dioxide: f64,
 
-    /// S3: high-density lipoproteins
-    #[serde(rename = "S3")]
-    pub hdl: f32,
+    #[serde(rename = "total sulfur dioxide")]
+    pub total_sulfur_dioxide: f64,
 
-    /// S4: total cholesterol
-    #[serde(rename = "S4")]
-    pub tch: f32,
+    #[serde(rename = "density")]
+    pub density: f64,
 
-    /// S5: possibly log of serum triglycerides level
-    #[serde(rename = "S5")]
-    pub ltg: f32,
+    #[serde(rename = "pH")]
+    pub ph: f64,
 
-    /// S6: blood sugar level
-    #[serde(rename = "S6")]
-    pub glu: u8,
+    #[serde(rename = "sulphates")]
+    pub sulphates: f64,
 
-    /// Y: quantitative measure of disease progression one year after baseline
-    #[serde(rename = "Y")]
-    pub response: u16,
+    #[serde(rename = "alcohol")]
+    pub alcohol: f64,
+
+    #[serde(rename = "quality")]
+    pub quality: i64,
 }
 
 type ShuffledData = ShuffledDataset<SqliteDataset<DiabetesItem>, DiabetesItem>;
@@ -84,23 +76,21 @@ impl DiabetesDataset {
 
     pub fn new(split: &str) -> Self {
         let dataset: SqliteDataset<DiabetesItem> =
-            HuggingfaceDatasetLoader::new("Jayabalambika/toy-diabetes")
+            HuggingfaceDatasetLoader::new("Ponrudee/winequality-white")
                 .dataset("train")
                 .unwrap();
 
         let len = dataset.len();
 
-        // Shuffle the dataset with a defined seed such that train and test sets have no overlap
-        // when splitting by indexes
         let dataset = ShuffledDataset::with_seed(dataset, 42);
 
         // The dataset from HuggingFace has only train split, so we manually split the train dataset into train
         // and test in a 80-20 ratio
 
         let filtered_dataset = match split {
-            "train" => PartialData::new(dataset, 0, len * 8 / 10), // Get first 80% dataset
-            "test" => PartialData::new(dataset, len * 8 / 10, len), // Take remaining 20%
-            _ => panic!("Invalid split type"),                     // Handle unexpected split types
+            "train" => PartialData::new(dataset, 0, len * 8 / 10),
+            "test" => PartialData::new(dataset, len * 8 / 10, len),
+            _ => panic!("Invalid split type"),
         };
 
         Self {
@@ -139,16 +129,17 @@ impl<B: Backend> Batcher<DiabetesItem, DiabetesBatch<B>> for DiabetesBatcher<B> 
         for item in items.iter() {
             let input_tensor = Tensor::<B, 1>::from_floats(
                 [
-                    item.age as f32,
-                    item.sex as f32,
-                    item.bmi,
-                    item.bp,
-                    item.tc as f32,
-                    item.ldl,
-                    item.hdl,
-                    item.tch,
-                    item.ltg,
-                    item.glu as f32,
+                    item.fixed_acidity as f32,
+                    item.volatile_acidity as f32,
+                    item.citric_acid as f32,
+                    item.residual_sugar as f32,
+                    item.chlorides as f32,
+                    item.free_sulfur_dioxide as f32,
+                    item.total_sulfur_dioxide as f32,
+                    item.density as f32,
+                    item.ph as f32,
+                    item.sulphates as f32,
+                    item.alcohol as f32,
                 ],
                 &self.device,
             );
@@ -161,7 +152,7 @@ impl<B: Backend> Batcher<DiabetesItem, DiabetesBatch<B>> for DiabetesBatcher<B> 
 
         let targets = items
             .iter()
-            .map(|item| Tensor::<B, 1>::from_floats([item.response as f32], &self.device))
+            .map(|item| Tensor::<B, 1>::from_floats([item.quality as f32], &self.device))
             .collect();
 
         let targets = Tensor::cat(targets, 0);

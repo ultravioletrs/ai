@@ -1,4 +1,4 @@
-use crate::dataset::{DiabetesBatcher, DiabetesDataset};
+use crate::data::{DiabetesBatcher, DiabetesDataset};
 use crate::model::RegressionModelConfig;
 use burn::{
     data::{dataloader::DataLoaderBuilder, dataset::Dataset},
@@ -13,14 +13,17 @@ use burn::{
     },
 };
 
-static ARTIFACT_DIR: &str = "regression/artifacts/";
+static ARTIFACT_DIR: &str = "winequality/artifacts/";
 
 #[derive(Config)]
 pub struct ExpConfig {
     #[config(default = 100)]
     pub num_epochs: usize,
 
-    #[config(default = 2)]
+    #[config(default = 128)]
+    pub batch_size: usize,
+
+    #[config(default = 4)]
     pub num_workers: usize,
 
     #[config(default = 42)]
@@ -28,21 +31,15 @@ pub struct ExpConfig {
 
     pub optimizer: SgdConfig,
 
-    #[config(default = 10)]
+    #[config(default = 11)]
     pub input_feature_len: usize,
-
-    #[config(default = 442)]
-    pub dataset_size: usize,
 }
 
 pub fn run<B: AutodiffBackend>(device: B::Device) {
-    // Config
     let optimizer = SgdConfig::new();
     let config = ExpConfig::new(optimizer);
     let model = RegressionModelConfig::new(config.input_feature_len).init(&device);
     B::seed(config.seed);
-
-    // Define train/test datasets and dataloaders
 
     let train_dataset = DiabetesDataset::train();
     let test_dataset = DiabetesDataset::test();
@@ -54,21 +51,18 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
 
     let batcher_test = DiabetesBatcher::<B::InnerBackend>::new(device.clone());
 
-    // Since dataset size is small, we do full batch gradient descent and set batch size equivalent to size of dataset
-
     let dataloader_train = DataLoaderBuilder::new(batcher_train)
-        .batch_size(train_dataset.len())
+        .batch_size(config.batch_size)
         .shuffle(config.seed)
         .num_workers(config.num_workers)
         .build(train_dataset);
 
     let dataloader_test = DataLoaderBuilder::new(batcher_test)
-        .batch_size(test_dataset.len())
+        .batch_size(config.batch_size)
         .shuffle(config.seed)
         .num_workers(config.num_workers)
         .build(test_dataset);
 
-    // Model
     let learner = LearnerBuilder::new(ARTIFACT_DIR)
         .metric_train_numeric(LossMetric::new())
         .metric_valid_numeric(LossMetric::new())
@@ -77,7 +71,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
             Aggregate::Mean,
             Direction::Lowest,
             Split::Valid,
-            StoppingCondition::NoImprovementSince { n_epochs: 1 },
+            StoppingCondition::NoImprovementSince { n_epochs: 5 },
         ))
         .devices(vec![device.clone()])
         .num_epochs(config.num_epochs)
@@ -88,7 +82,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
 
     config
         .save(format!("{ARTIFACT_DIR}/config.json").as_str())
-        .unwrap();
+        .expect("Failed to save config");
 
     model_trained
         .save_file(

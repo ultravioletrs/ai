@@ -4,7 +4,7 @@ mod ndarray {
         ndarray::{NdArray, NdArrayDevice},
         Autodiff,
     };
-    use regression::training;
+    use winequality::training;
 
     pub fn run() {
         let device = NdArrayDevice::Cpu;
@@ -18,7 +18,7 @@ mod wgpu {
         wgpu::{Wgpu, WgpuDevice},
         Autodiff,
     };
-    use regression::training;
+    use winequality::training;
 
     pub fn run() {
         let device = WgpuDevice::default();

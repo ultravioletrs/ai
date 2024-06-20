@@ -1,0 +1,17 @@
+[package]
+name = "iris"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+ndarray = ["burn/ndarray"]
+wgpu = ["burn/wgpu"]
+
+[dependencies]
+burn = { version = "0.13.2", features = [
+    "dataset",
+    "ndarray",
+    "train",
+    "wgpu",
+] }
+serde = { version = "1.0.203", features = ["derive", "std"] }

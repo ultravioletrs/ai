@@ -1,4 +1,4 @@
 [workspace]
 
-members = ["addition", "regression", "mnist"]
+members = ["addition", "mnist", "cifar10", "winequality", "iris", "agnews", "imdb"]
 resolver = "2"

@@ -76,7 +76,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
             Aggregate::Mean,
             Direction::Lowest,
             Split::Valid,
-            StoppingCondition::NoImprovementSince { n_epochs: 10 },
+            StoppingCondition::NoImprovementSince { n_epochs: 5 },
         ))
         .devices(vec![device.clone()])
         .num_epochs(config.num_epochs)

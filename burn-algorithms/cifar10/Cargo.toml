@@ -1,7 +1,9 @@
 [package]
+edition.workspace = true
+license.workspace = true
+version.workspace = true
 name = "cifar10"
-version = "0.1.0"
-edition = "2021"
+publish = false
 
 [features]
 default = ["burn/default"]

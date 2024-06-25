@@ -1,4 +1,4 @@
-use crate::data::DiabetesBatch;
+use crate::data::WineQualityBatch;
 use burn::{
     nn::{
         loss::{MseLoss, Reduction::Mean},
@@ -35,7 +35,7 @@ impl<B: Backend> RegressionModel<B> {
         self.input_layer.forward(x)
     }
 
-    pub fn forward_step(&self, item: DiabetesBatch<B>) -> RegressionOutput<B> {
+    pub fn forward_step(&self, item: WineQualityBatch<B>) -> RegressionOutput<B> {
         let targets: Tensor<B, 2> = item.targets.unsqueeze();
         let output: Tensor<B, 2> = self.forward(item.inputs);
 
@@ -49,16 +49,16 @@ impl<B: Backend> RegressionModel<B> {
     }
 }
 
-impl<B: AutodiffBackend> TrainStep<DiabetesBatch<B>, RegressionOutput<B>> for RegressionModel<B> {
-    fn step(&self, item: DiabetesBatch<B>) -> TrainOutput<RegressionOutput<B>> {
+impl<B: AutodiffBackend> TrainStep<WineQualityBatch<B>, RegressionOutput<B>> for RegressionModel<B> {
+    fn step(&self, item: WineQualityBatch<B>) -> TrainOutput<RegressionOutput<B>> {
         let item = self.forward_step(item);
 
         TrainOutput::new(self, item.loss.backward(), item)
     }
 }
 
-impl<B: Backend> ValidStep<DiabetesBatch<B>, RegressionOutput<B>> for RegressionModel<B> {
-    fn step(&self, item: DiabetesBatch<B>) -> RegressionOutput<B> {
+impl<B: Backend> ValidStep<WineQualityBatch<B>, RegressionOutput<B>> for RegressionModel<B> {
+    fn step(&self, item: WineQualityBatch<B>) -> RegressionOutput<B> {
         self.forward_step(item)
     }
 }

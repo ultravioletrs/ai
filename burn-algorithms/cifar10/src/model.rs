@@ -5,7 +5,12 @@ use burn::{
         Dropout, DropoutConfig, Linear, LinearConfig, PaddingConfig2d, Relu,
     },
     prelude::*,
+    tensor::backend::AutodiffBackend,
+    train::{ClassificationOutput, TrainOutput, TrainStep, ValidStep},
 };
+use nn::loss::CrossEntropyLossConfig;
+
+use crate::data::ClassificationBatch;
 
 #[derive(Module, Debug)]
 pub struct Cnn<B: Backend> {
@@ -96,5 +101,32 @@ impl<B: Backend> Cnn<B> {
         let x = self.dropout.forward(x);
 
         self.fc2.forward(x)
+    }
+
+    pub fn forward_classification(
+        &self,
+        images: Tensor<B, 4>,
+        targets: Tensor<B, 1, Int>,
+    ) -> ClassificationOutput<B> {
+        let output = self.forward(images);
+        let loss = CrossEntropyLossConfig::new()
+            .init(&output.device())
+            .forward(output.clone(), targets.clone());
+
+        ClassificationOutput::new(loss, output, targets)
+    }
+}
+
+impl<B: AutodiffBackend> TrainStep<ClassificationBatch<B>, ClassificationOutput<B>> for Cnn<B> {
+    fn step(&self, batch: ClassificationBatch<B>) -> TrainOutput<ClassificationOutput<B>> {
+        let item = self.forward_classification(batch.images, batch.targets);
+
+        TrainOutput::new(self, item.loss.backward(), item)
+    }
+}
+
+impl<B: Backend> ValidStep<ClassificationBatch<B>, ClassificationOutput<B>> for Cnn<B> {
+    fn step(&self, batch: ClassificationBatch<B>) -> ClassificationOutput<B> {
+        self.forward_classification(batch.images, batch.targets)
     }
 }

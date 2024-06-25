@@ -16,4 +16,5 @@ burn = { version = "0.13.2", features = [
     "train",
     "wgpu",
 ] }
+csv = "1.3.0"
 serde = { version = "1.0.203", features = ["derive", "std"] }

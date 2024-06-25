@@ -3,14 +3,15 @@ use burn::{
         dataloader::batcher::Batcher,
         dataset::{
             transform::{PartialDataset, ShuffledDataset},
-            Dataset, HuggingfaceDatasetLoader, SqliteDataset,
+            Dataset, InMemDataset,
         },
     },
     prelude::*,
 };
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct DiabetesItem {
+pub struct WineQualityItem {
     #[serde(rename = "fixed acidity")]
     pub fixed_acidity: f64,
 
@@ -48,15 +49,15 @@ pub struct DiabetesItem {
     pub quality: i64,
 }
 
-type ShuffledData = ShuffledDataset<SqliteDataset<DiabetesItem>, DiabetesItem>;
-type PartialData = PartialDataset<ShuffledData, DiabetesItem>;
+type ShuffledData = ShuffledDataset<InMemDataset<WineQualityItem>, WineQualityItem>;
+type PartialData = PartialDataset<ShuffledData, WineQualityItem>;
 
-pub struct DiabetesDataset {
+pub struct WineQualityDataset {
     dataset: PartialData,
 }
 
-impl Dataset<DiabetesItem> for DiabetesDataset {
-    fn get(&self, index: usize) -> Option<DiabetesItem> {
+impl Dataset<WineQualityItem> for WineQualityDataset {
+    fn get(&self, index: usize) -> Option<WineQualityItem> {
         self.dataset.get(index)
     }
 
@@ -65,7 +66,7 @@ impl Dataset<DiabetesItem> for DiabetesDataset {
     }
 }
 
-impl DiabetesDataset {
+impl WineQualityDataset {
     pub fn train() -> Self {
         Self::new("train")
     }
@@ -75,10 +76,13 @@ impl DiabetesDataset {
     }
 
     pub fn new(split: &str) -> Self {
-        let dataset: SqliteDataset<DiabetesItem> =
-            HuggingfaceDatasetLoader::new("Ponrudee/winequality-white")
-                .dataset("train")
-                .unwrap();
+        let path = WineQualityDataset::read();
+
+        // Build dataset from csv with tab (';') delimiter
+        let mut rdr = csv::ReaderBuilder::new();
+        let rdr = rdr.delimiter(b';');
+
+        let dataset = InMemDataset::from_csv(path, rdr).unwrap();
 
         let len = dataset.len();
 
@@ -97,20 +101,32 @@ impl DiabetesDataset {
             dataset: filtered_dataset,
         }
     }
+
+    fn read() -> PathBuf {
+        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+        let wine_dir = example_dir.join("data/");
+
+        let csv_file = wine_dir.join("winequality-white.csv");
+        if !csv_file.exists() {
+            panic!("Download the Wine Quality dataset from https://archive.ics.uci.edu/dataset/186/wine+quality and place it in the data directory");
+        }
+
+        csv_file
+    }
 }
 
 #[derive(Clone, Debug)]
-pub struct DiabetesBatcher<B: Backend> {
+pub struct WineQualityBatcher<B: Backend> {
     device: B::Device,
 }
 
 #[derive(Clone, Debug)]
-pub struct DiabetesBatch<B: Backend> {
+pub struct WineQualityBatch<B: Backend> {
     pub inputs: Tensor<B, 2>,
     pub targets: Tensor<B, 1>,
 }
 
-impl<B: Backend> DiabetesBatcher<B> {
+impl<B: Backend> WineQualityBatcher<B> {
     pub fn new(device: B::Device) -> Self {
         Self { device }
     }
@@ -122,8 +138,8 @@ impl<B: Backend> DiabetesBatcher<B> {
     }
 }
 
-impl<B: Backend> Batcher<DiabetesItem, DiabetesBatch<B>> for DiabetesBatcher<B> {
-    fn batch(&self, items: Vec<DiabetesItem>) -> DiabetesBatch<B> {
+impl<B: Backend> Batcher<WineQualityItem, WineQualityBatch<B>> for WineQualityBatcher<B> {
+    fn batch(&self, items: Vec<WineQualityItem>) -> WineQualityBatch<B> {
         let mut inputs: Vec<Tensor<B, 2>> = Vec::new();
 
         for item in items.iter() {
@@ -158,6 +174,6 @@ impl<B: Backend> Batcher<DiabetesItem, DiabetesBatch<B>> for DiabetesBatcher<B> 
         let targets = Tensor::cat(targets, 0);
         let targets = self.min_max_norm(targets);
 
-        DiabetesBatch { inputs, targets }
+        WineQualityBatch { inputs, targets }
     }
 }

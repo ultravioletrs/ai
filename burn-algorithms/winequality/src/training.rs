@@ -1,4 +1,4 @@
-use crate::data::{DiabetesBatcher, DiabetesDataset};
+use crate::data::{WineQualityBatcher, WineQualityDataset};
 use crate::model::RegressionModelConfig;
 use burn::{
     data::{dataloader::DataLoaderBuilder, dataset::Dataset},
@@ -41,15 +41,15 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
     let model = RegressionModelConfig::new(config.input_feature_len).init(&device);
     B::seed(config.seed);
 
-    let train_dataset = DiabetesDataset::train();
-    let test_dataset = DiabetesDataset::test();
+    let train_dataset = WineQualityDataset::train();
+    let test_dataset = WineQualityDataset::test();
 
     println!("Train Dataset Size: {}", train_dataset.len());
     println!("Test Dataset Size: {}", test_dataset.len());
 
-    let batcher_train = DiabetesBatcher::<B>::new(device.clone());
+    let batcher_train = WineQualityBatcher::<B>::new(device.clone());
 
-    let batcher_test = DiabetesBatcher::<B::InnerBackend>::new(device.clone());
+    let batcher_test = WineQualityBatcher::<B::InnerBackend>::new(device.clone());
 
     let dataloader_train = DataLoaderBuilder::new(batcher_train)
         .batch_size(config.batch_size)

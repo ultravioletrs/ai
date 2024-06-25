@@ -17,4 +17,5 @@ burn = { version = "0.13.2", features = [
     "vision",
     "wgpu",
 ] }
+burn-common = "0.13.2"
 serde = { version = "1.0.203", features = ["derive", "std"] }

@@ -1,54 +1,20 @@
 use std::time::Instant;
 
-use crate::{
-    data::{ClassificationBatch, ClassificationBatcher},
-    dataset::CIFAR10Loader,
-    model::Cnn,
-};
+use crate::{data::ClassificationBatcher, dataset::CIFAR10Loader, model::Cnn};
 use burn::{
     data::{dataloader::DataLoaderBuilder, dataset::vision::ImageFolderDataset},
-    nn::loss::CrossEntropyLossConfig,
     optim::SgdConfig,
     prelude::*,
     record::CompactRecorder,
     tensor::backend::AutodiffBackend,
     train::{
         metric::{AccuracyMetric, LossMetric},
-        ClassificationOutput, LearnerBuilder, TrainOutput, TrainStep, ValidStep,
+        LearnerBuilder,
     },
 };
 
 const NUM_CLASSES: u8 = 10;
 const ARTIFACT_DIR: &str = "cifar10/artifacts/";
-
-impl<B: Backend> Cnn<B> {
-    pub fn forward_classification(
-        &self,
-        images: Tensor<B, 4>,
-        targets: Tensor<B, 1, Int>,
-    ) -> ClassificationOutput<B> {
-        let output = self.forward(images);
-        let loss = CrossEntropyLossConfig::new()
-            .init(&output.device())
-            .forward(output.clone(), targets.clone());
-
-        ClassificationOutput::new(loss, output, targets)
-    }
-}
-
-impl<B: AutodiffBackend> TrainStep<ClassificationBatch<B>, ClassificationOutput<B>> for Cnn<B> {
-    fn step(&self, batch: ClassificationBatch<B>) -> TrainOutput<ClassificationOutput<B>> {
-        let item = self.forward_classification(batch.images, batch.targets);
-
-        TrainOutput::new(self, item.loss.backward(), item)
-    }
-}
-
-impl<B: Backend> ValidStep<ClassificationBatch<B>, ClassificationOutput<B>> for Cnn<B> {
-    fn step(&self, batch: ClassificationBatch<B>) -> ClassificationOutput<B> {
-        self.forward_classification(batch.images, batch.targets)
-    }
-}
 
 #[derive(Config)]
 pub struct TrainingConfig {

@@ -1,15 +1,18 @@
-use std::sync::Arc;
-
 use burn::{
     data::{
         dataloader::batcher::Batcher,
-        dataset::{Dataset, HuggingfaceDatasetLoader, SqliteDataset},
+        dataset::{
+            transform::{PartialDataset, ShuffledDataset},
+            Dataset, InMemDataset,
+        },
     },
     prelude::*,
     tensor::{backend::Backend, Tensor},
 };
 use derive_new::new;
 use nn::attention::generate_padding_mask;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[derive(new, Clone, Debug)]
 pub struct ClassificationItem {
@@ -19,19 +22,29 @@ pub struct ClassificationItem {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct IMDBItem {
-    pub text: String,
-    pub label: u8,
+    pub review: String,
+    pub sentiment: String,
+}
+fn sentiment_to_label(sentiment: String) -> u8 {
+    match sentiment.as_str() {
+        "negative" => 0,
+        "positive" => 1,
+        _ => panic!("invalid class"),
+    }
 }
 
+type ShuffledData = ShuffledDataset<InMemDataset<IMDBItem>, IMDBItem>;
+type PartialData = PartialDataset<ShuffledData, IMDBItem>;
+
 pub struct IMDBDataset {
-    dataset: SqliteDataset<IMDBItem>,
+    dataset: PartialData,
 }
 
 impl Dataset<ClassificationItem> for IMDBDataset {
     fn get(&self, index: usize) -> Option<ClassificationItem> {
         self.dataset
             .get(index)
-            .map(|item| ClassificationItem::new(item.text, item.label))
+            .map(|item| ClassificationItem::new(item.review, sentiment_to_label(item.sentiment)))
     }
 
     fn len(&self) -> usize {
@@ -49,10 +62,42 @@ impl IMDBDataset {
     }
 
     pub fn new(split: &str) -> Self {
-        let dataset: SqliteDataset<IMDBItem> = HuggingfaceDatasetLoader::new("stanfordnlp/imdb")
-            .dataset(split)
-            .unwrap();
-        Self { dataset }
+        let path = IMDBDataset::read();
+
+        // Build dataset from csv with tab (',') delimiter
+        let mut rdr = csv::ReaderBuilder::new();
+        let rdr = rdr.delimiter(b',');
+
+        let dataset = InMemDataset::from_csv(path, rdr).unwrap();
+
+        let len = dataset.len();
+
+        let dataset = ShuffledDataset::with_seed(dataset, 42);
+
+        // The dataset from HuggingFace has only train split, so we manually split the train dataset into train
+        // and test in a 80-20 ratio
+
+        let filtered_dataset = match split {
+            "train" => PartialData::new(dataset, 0, len * 8 / 10),
+            "test" => PartialData::new(dataset, len * 8 / 10, len),
+            _ => panic!("Invalid split type"),
+        };
+
+        Self {
+            dataset: filtered_dataset,
+        }
+    }
+
+    fn read() -> PathBuf {
+        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+        let wine_dir = example_dir.join("data/");
+
+        let csv_file = wine_dir.join("IMDB Dataset.csv");
+        if !csv_file.exists() {
+            panic!("Download the IMDB review dataset from https://huggingface.co/datasets/scikit-learn/imdb and place it in the data directory");
+        }
+
+        csv_file
     }
 }
 

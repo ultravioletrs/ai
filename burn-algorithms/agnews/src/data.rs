@@ -1,10 +1,9 @@
+use std::path::Path;
 use std::sync::Arc;
 
+use burn::data::dataset::InMemDataset;
 use burn::{
-    data::{
-        dataloader::batcher::Batcher,
-        dataset::{Dataset, HuggingfaceDatasetLoader, SqliteDataset},
-    },
+    data::{dataloader::batcher::Batcher, dataset::Dataset},
     prelude::*,
     tensor::{backend::Backend, Tensor},
 };
@@ -24,19 +23,20 @@ pub trait ClassificationDataset: Dataset<ClassificationItem> {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct AgNewsItem {
-    pub text: String,
+    pub title: String,
+    pub description: String,
     pub label: usize,
 }
 
 pub struct AgNewsDataset {
-    dataset: SqliteDataset<AgNewsItem>,
+    dataset: InMemDataset<AgNewsItem>,
 }
 
 impl Dataset<ClassificationItem> for AgNewsDataset {
     fn get(&self, index: usize) -> Option<ClassificationItem> {
-        self.dataset
-            .get(index)
-            .map(|item| ClassificationItem::new(item.text, item.label))
+        self.dataset.get(index).map(|item| {
+            ClassificationItem::new(format!("{} {}", item.title, item.description), item.label)
+        })
     }
 
     fn len(&self) -> usize {
@@ -46,18 +46,35 @@ impl Dataset<ClassificationItem> for AgNewsDataset {
 
 impl AgNewsDataset {
     pub fn train() -> Self {
-        Self::new("train")
+        Self::new("train.csv")
     }
 
     pub fn test() -> Self {
-        Self::new("test")
+        Self::new("test.csv")
     }
 
     pub fn new(split: &str) -> Self {
-        let dataset: SqliteDataset<AgNewsItem> = HuggingfaceDatasetLoader::new("ag_news")
-            .dataset(split)
-            .unwrap();
+        let dataset = Self::read(split);
         Self { dataset }
+    }
+
+    fn read(file_name: &str) -> InMemDataset<AgNewsItem> {
+        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+        let iris_dir = example_dir.join("data/ag_news_csv/");
+
+        let csv_file = iris_dir.join(file_name);
+
+        if !csv_file.exists() {
+            panic!("Download the AG News dataset from https://s3.amazonaws.com/fast-ai-nlp/ag_news_csv.tgz and place it in the data directory");
+        }
+
+        // Build dataset from csv with tab (',') delimiter
+        let mut rdr = csv::ReaderBuilder::new();
+        let rdr = rdr.delimiter(b',');
+
+        let dataset = InMemDataset::from_csv(csv_file, rdr).unwrap();
+
+        dataset
     }
 }
 

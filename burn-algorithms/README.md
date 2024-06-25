@@ -59,6 +59,22 @@ Tensor {
 }
 ```
 
+## Iris dataset
+
+The dataset is already downloaded and stored in the `data` folder inside the `iris` folder.
+
+Run the following command to train the model on wgpu or ndrray.
+
+```bash
+cargo run --release --bin iris --features wgpu
+```
+
+or
+
+```bash
+cargo run --release --bin iris --features ndarray
+```
+
 ## Cifar-10 dataset
 
 First, download the dataset from <https://s3.amazonaws.com/fast-ai-sample/cifar10.tgz> and extract it in the `data` folder inside the `cifar10` folder.

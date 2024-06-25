@@ -1,9 +1,11 @@
+use std::path::{Path, PathBuf};
+
 use burn::{
     data::{
         dataloader::batcher::Batcher,
         dataset::{
             transform::{PartialDataset, ShuffledDataset},
-            Dataset, HuggingfaceDatasetLoader, SqliteDataset,
+            Dataset, InMemDataset,
         },
     },
     prelude::*,
@@ -27,7 +29,7 @@ pub struct IrisItem {
     pub species: String,
 }
 
-type ShuffledData = ShuffledDataset<SqliteDataset<IrisItem>, IrisItem>;
+type ShuffledData = ShuffledDataset<InMemDataset<IrisItem>, IrisItem>;
 type PartialData = PartialDataset<ShuffledData, IrisItem>;
 
 pub struct IrisDataset {
@@ -63,9 +65,13 @@ impl IrisDataset {
     }
 
     pub fn new(split: &str) -> Self {
-        let dataset: SqliteDataset<IrisItem> = HuggingfaceDatasetLoader::new("scikit-learn/iris")
-            .dataset("train")
-            .unwrap();
+        let path = IrisDataset::read();
+
+        // Build dataset from csv with tab (',') delimiter
+        let mut rdr = csv::ReaderBuilder::new();
+        let rdr = rdr.delimiter(b',');
+
+        let dataset = InMemDataset::from_csv(path, rdr).unwrap();
 
         let len = dataset.len();
 
@@ -83,6 +89,18 @@ impl IrisDataset {
         Self {
             dataset: filtered_dataset,
         }
+    }
+
+    fn read() -> PathBuf {
+        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+        let iris_dir = example_dir.join("data/");
+
+        let csv_file = iris_dir.join("Iris.csv");
+        if !csv_file.exists() {
+            panic!("Download the Iris dataset from https://www.kaggle.com/datasets/saurabh00007/iriscsv and place it in the data directory");
+        }
+
+        csv_file
     }
 }
 
@@ -134,7 +152,7 @@ impl<B: Backend> Batcher<IrisItem, IrisBatch<B>> for IrisBatcher<B> {
             .collect();
 
         let targets = Tensor::cat(targets, 0);
-        
+
         IrisBatch { inputs, targets }
     }
 }

@@ -17,4 +17,4 @@ Cargo.lock
 artifacts/
 
 # Data files
-burn-algorithms/cifar10/cifar10/
+data/

@@ -64,7 +64,6 @@ impl IMDBDataset {
     pub fn new(split: &str) -> Self {
         let path = IMDBDataset::read();
 
-        // Build dataset from csv with tab (',') delimiter
         let mut rdr = csv::ReaderBuilder::new();
         let rdr = rdr.delimiter(b',');
 
@@ -76,7 +75,6 @@ impl IMDBDataset {
 
         // The dataset from HuggingFace has only train split, so we manually split the train dataset into train
         // and test in a 80-20 ratio
-
         let filtered_dataset = match split {
             "train" => PartialData::new(dataset, 0, len * 8 / 10),
             "test" => PartialData::new(dataset, len * 8 / 10, len),

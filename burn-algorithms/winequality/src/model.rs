@@ -49,7 +49,9 @@ impl<B: Backend> RegressionModel<B> {
     }
 }
 
-impl<B: AutodiffBackend> TrainStep<WineQualityBatch<B>, RegressionOutput<B>> for RegressionModel<B> {
+impl<B: AutodiffBackend> TrainStep<WineQualityBatch<B>, RegressionOutput<B>>
+    for RegressionModel<B>
+{
     fn step(&self, item: WineQualityBatch<B>) -> TrainOutput<RegressionOutput<B>> {
         let item = self.forward_step(item);
 

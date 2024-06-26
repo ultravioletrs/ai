@@ -21,7 +21,7 @@ use std::sync::Arc;
 pub struct TrainingConfig {
     pub transformer: TransformerEncoderConfig,
     pub optimizer: AdamConfig,
-    
+
     #[config(default = 512)]
     pub max_seq_length: usize,
     #[config(default = 32)]

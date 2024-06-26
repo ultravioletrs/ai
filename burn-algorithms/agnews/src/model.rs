@@ -128,9 +128,7 @@ impl<B: AutodiffBackend> TrainStep<ClassificationTrainingBatch<B>, Classificatio
     }
 }
 
-impl<B: Backend> ValidStep<ClassificationTrainingBatch<B>, ClassificationOutput<B>>
-    for Model<B>
-{
+impl<B: Backend> ValidStep<ClassificationTrainingBatch<B>, ClassificationOutput<B>> for Model<B> {
     fn step(&self, item: ClassificationTrainingBatch<B>) -> ClassificationOutput<B> {
         self.forward(item)
     }

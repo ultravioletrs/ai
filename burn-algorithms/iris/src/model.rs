@@ -25,10 +25,10 @@ impl ClassificationModelConfig {
         let input_layer = nn::LinearConfig::new(self.input_size, self.hidden_size)
             .with_bias(true)
             .init(device);
-        let hidden_layer = nn::LinearConfig::new(self.hidden_size, self.hidden_size/2)
+        let hidden_layer = nn::LinearConfig::new(self.hidden_size, self.hidden_size / 2)
             .with_bias(true)
             .init(device);
-        let output_layer = nn::LinearConfig::new(self.hidden_size/2, 3)
+        let output_layer = nn::LinearConfig::new(self.hidden_size / 2, 3)
             .with_bias(true)
             .init(device);
 
@@ -57,7 +57,7 @@ impl<B: Backend> ClassificationModel<B> {
         let loss = CrossEntropyLossConfig::new()
             .init(&output.device())
             .forward(output.clone(), targets.clone());
-        
+
         ClassificationOutput {
             loss,
             output,
@@ -66,7 +66,9 @@ impl<B: Backend> ClassificationModel<B> {
     }
 }
 
-impl<B: AutodiffBackend> TrainStep<IrisBatch<B>, ClassificationOutput<B>> for ClassificationModel<B> {
+impl<B: AutodiffBackend> TrainStep<IrisBatch<B>, ClassificationOutput<B>>
+    for ClassificationModel<B>
+{
     fn step(&self, item: IrisBatch<B>) -> TrainOutput<ClassificationOutput<B>> {
         let item = self.forward_classification(item);
 

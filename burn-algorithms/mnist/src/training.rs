@@ -36,7 +36,6 @@ pub struct MnistTrainingConfig {
 }
 
 fn create_artifact_dir(artifact_dir: &str) {
-    // Remove existing artifacts before to get an accurate learner summary
     std::fs::remove_dir_all(artifact_dir).ok();
     std::fs::create_dir_all(artifact_dir).ok();
 }
@@ -47,7 +46,6 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
     let config = MnistTrainingConfig::new(config_optimizer);
     B::seed(config.seed);
 
-    // Data
     let batcher_train = MnistBatcher::<B>::new(device.clone());
     let batcher_valid = MnistBatcher::<B::InnerBackend>::new(device.clone());
 
@@ -62,7 +60,6 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
         .num_workers(config.num_workers)
         .build(MnistDataset::test());
 
-    // Model
     let learner = LearnerBuilder::new(ARTIFACT_DIR)
         .metric_train_numeric(AccuracyMetric::new())
         .metric_valid_numeric(AccuracyMetric::new())

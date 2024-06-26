@@ -68,7 +68,6 @@ impl AgNewsDataset {
             panic!("Download the AG News dataset from https://s3.amazonaws.com/fast-ai-nlp/ag_news_csv.tgz and place it in the data directory");
         }
 
-        // Build dataset from csv with tab (',') delimiter
         let mut rdr = csv::ReaderBuilder::new();
         let rdr = rdr.delimiter(b',');
 

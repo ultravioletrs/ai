@@ -6,7 +6,6 @@ use burn::{
     prelude::*,
 };
 
-// CIFAR-10 mean and std values
 const MEAN: [f32; 3] = [0.4914, 0.48216, 0.44653];
 const STD: [f32; 3] = [0.24703, 0.24349, 0.26159];
 

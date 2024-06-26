@@ -9,7 +9,7 @@ use burn::{
     train::{
         metric::{
             store::{Aggregate, Direction, Split},
-            AccuracyMetric, CpuMemory, CpuTemperature, CpuUse, LossMetric,
+            AccuracyMetric, LossMetric,
         },
         LearnerBuilder, MetricEarlyStoppingStrategy, StoppingCondition,
     },
@@ -19,19 +19,20 @@ static ARTIFACT_DIR: &str = "artifacts/";
 
 #[derive(Config)]
 pub struct MnistTrainingConfig {
+    pub optimizer: AdamConfig,
+
     #[config(default = 10)]
     pub num_epochs: usize,
-
+    #[config(default = 5)]
+    pub stop_after_n_epochs: usize,
     #[config(default = 64)]
     pub batch_size: usize,
-
     #[config(default = 4)]
     pub num_workers: usize,
-
     #[config(default = 42)]
     pub seed: u64,
-
-    pub optimizer: AdamConfig,
+    #[config(default = 1e-4)]
+    pub learning_rate: f64,
 }
 
 fn create_artifact_dir(artifact_dir: &str) {
@@ -65,12 +66,6 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
     let learner = LearnerBuilder::new(ARTIFACT_DIR)
         .metric_train_numeric(AccuracyMetric::new())
         .metric_valid_numeric(AccuracyMetric::new())
-        .metric_train_numeric(CpuUse::new())
-        .metric_valid_numeric(CpuUse::new())
-        .metric_train_numeric(CpuMemory::new())
-        .metric_valid_numeric(CpuMemory::new())
-        .metric_train_numeric(CpuTemperature::new())
-        .metric_valid_numeric(CpuTemperature::new())
         .metric_train_numeric(LossMetric::new())
         .metric_valid_numeric(LossMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
@@ -78,12 +73,18 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
             Aggregate::Mean,
             Direction::Lowest,
             Split::Valid,
-            StoppingCondition::NoImprovementSince { n_epochs: 1 },
+            StoppingCondition::NoImprovementSince {
+                n_epochs: config.stop_after_n_epochs,
+            },
         ))
         .devices(vec![device.clone()])
         .num_epochs(config.num_epochs)
         .summary()
-        .build(Model::new(&device), config.optimizer.init(), 1e-4);
+        .build(
+            Model::new(&device),
+            config.optimizer.init(),
+            config.learning_rate,
+        );
 
     let model_trained = learner.fit(dataloader_train, dataloader_test);
 

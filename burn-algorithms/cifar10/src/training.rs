@@ -8,8 +8,11 @@ use burn::{
     record::CompactRecorder,
     tensor::backend::AutodiffBackend,
     train::{
-        metric::{AccuracyMetric, LossMetric},
-        LearnerBuilder,
+        metric::{
+            store::{Aggregate, Direction, Split},
+            AccuracyMetric, LossMetric,
+        },
+        LearnerBuilder, MetricEarlyStoppingStrategy, StoppingCondition,
     },
 };
 
@@ -19,8 +22,11 @@ const ARTIFACT_DIR: &str = "cifar10/artifacts/";
 #[derive(Config)]
 pub struct TrainingConfig {
     pub optimizer: SgdConfig,
+    
     #[config(default = 30)]
     pub num_epochs: usize,
+    #[config(default = 5)]
+    pub stop_after_n_epochs: usize,
     #[config(default = 128)]
     pub batch_size: usize,
     #[config(default = 4)]
@@ -66,6 +72,14 @@ pub fn train<B: AutodiffBackend>(config: TrainingConfig, device: B::Device) {
         .metric_train_numeric(LossMetric::new())
         .metric_valid_numeric(LossMetric::new())
         .with_file_checkpointer(CompactRecorder::new())
+        .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+            Aggregate::Mean,
+            Direction::Lowest,
+            Split::Valid,
+            StoppingCondition::NoImprovementSince {
+                n_epochs: config.stop_after_n_epochs,
+            },
+        ))
         .devices(vec![device.clone()])
         .num_epochs(config.num_epochs)
         .summary()

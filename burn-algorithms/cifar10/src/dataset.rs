@@ -26,7 +26,7 @@ fn data_path() -> PathBuf {
 
     let labels_file = cifar_dir.join("labels.txt");
     if !labels_file.exists() {
-        panic!("Downloading CIFAR-10 dataset...");
+        panic!("Download the CIFAR-10 dataset from https://s3.amazonaws.com/fast-ai-sample/cifar10.tgz and place it in the data directory");
     }
 
     cifar_dir

@@ -1,9 +1,17 @@
 # Burn Algorithms
 
+The need to run machine learning algorithms either training or making inference from a single algorithm has been a challenge with Python based models This is where Rust comes in. Rust is a systems programming language that runs blazingly fast, prevents segfaults, and guarantees thread safety. Unlike C++ or C, Rust is memory safe by default.
+
+Burn Algorithms is a collection machine learning algorithms that is written in Rust using [burn](https://burn.dev/). Burn is a deep learning Framework for Rust that is designed to be extremely flexible, compute efficient and highly portable. Burn strives to be as fast as possible on as many hardwares as possible, with robust implementations. With Burn, you can run your machine learning models on the CPU, GPU, WebAssembly, and other hardwares.
+
+## Examples
+
+The following examples are available:
+
 - [x] Matrix Addition
 - [x] Classification problem - (Iris dataset)
 - [x] Regression problem - (Wine Quality dataset)
-- [x] Image Classification - (MNIST dataset)
+- [x] Image Classification - (MNIST dataset) - (WIP)
 - [x] Image Classification - (CIFAR-10 dataset)
 - [x] Text Classification - (AG News dataset)
 - [x] Text Classification - (IMDB dataset)
@@ -229,7 +237,7 @@ The output should be something like:
 or
 
 ```bash
-cargo run --release --bin cifar10 --features ndarray
+cargo run --release --bin mnist --features ndarray
 ```
 
 The output should be something like:
@@ -357,3 +365,9 @@ The output should be something like:
 ```bash
 
 ```
+
+## References
+
+- [Burn-Github](https://burn.dev/)
+- [Burn-Documentation](https://burn.dev/docs/burn/)
+- [Burn-Book](https://burn.dev/book/)

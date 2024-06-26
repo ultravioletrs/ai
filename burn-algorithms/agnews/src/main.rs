@@ -4,10 +4,10 @@ use burn::{
     tensor::backend::AutodiffBackend,
 };
 
-use agnews::{data::AgNewsDataset, training::ExperimentConfig};
+use agnews::{data::AgNewsDataset, training::TrainingConfig};
 
 pub fn launch<B: AutodiffBackend>(devices: B::Device) {
-    let config = ExperimentConfig::new(
+    let config = TrainingConfig::new(
         TransformerEncoderConfig::new(256, 1024, 8, 4)
             .with_norm_first(true)
             .with_quiet_softmax(true),

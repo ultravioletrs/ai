@@ -17,7 +17,7 @@ use burn::{
 use crate::data::{ClassificationInferenceBatch, ClassificationTrainingBatch};
 
 #[derive(Config)]
-pub struct ClassificationModelConfig {
+pub struct ModelConfig {
     pub transformer: TransformerEncoderConfig,
     pub num_classes: usize,
     pub vocab_size: usize,
@@ -25,7 +25,7 @@ pub struct ClassificationModelConfig {
 }
 
 #[derive(Module, Debug)]
-pub struct ClassificationModel<B: Backend> {
+pub struct Model<B: Backend> {
     embedding_token: Embedding<B>,
     embedding_position: Embedding<B>,
     transformer: TransformerEncoder<B>,
@@ -34,8 +34,8 @@ pub struct ClassificationModel<B: Backend> {
     max_length: usize,
 }
 
-impl ClassificationModelConfig {
-    pub fn init<B: Backend>(&self, device: &B::Device) -> ClassificationModel<B> {
+impl ModelConfig {
+    pub fn init<B: Backend>(&self, device: &B::Device) -> Model<B> {
         let embedding_token =
             EmbeddingConfig::new(self.vocab_size, self.transformer.d_model).init(device);
         let embedding_position =
@@ -44,7 +44,7 @@ impl ClassificationModelConfig {
         let transformer = self.transformer.init(device);
         let output = LinearConfig::new(self.transformer.d_model, self.num_classes).init(device);
 
-        ClassificationModel {
+        Model {
             embedding_token,
             embedding_position,
             transformer,
@@ -55,7 +55,7 @@ impl ClassificationModelConfig {
     }
 }
 
-impl<B: Backend> ClassificationModel<B> {
+impl<B: Backend> Model<B> {
     pub fn forward(&self, item: ClassificationTrainingBatch<B>) -> ClassificationOutput<B> {
         let [batch_size, seq_length] = item.tokens.dims();
         let device = &self.embedding_token.devices()[0];
@@ -118,7 +118,7 @@ impl<B: Backend> ClassificationModel<B> {
 }
 
 impl<B: AutodiffBackend> TrainStep<ClassificationTrainingBatch<B>, ClassificationOutput<B>>
-    for ClassificationModel<B>
+    for Model<B>
 {
     fn step(&self, item: ClassificationTrainingBatch<B>) -> TrainOutput<ClassificationOutput<B>> {
         let item = self.forward(item);
@@ -129,7 +129,7 @@ impl<B: AutodiffBackend> TrainStep<ClassificationTrainingBatch<B>, Classificatio
 }
 
 impl<B: Backend> ValidStep<ClassificationTrainingBatch<B>, ClassificationOutput<B>>
-    for ClassificationModel<B>
+    for Model<B>
 {
     fn step(&self, item: ClassificationTrainingBatch<B>) -> ClassificationOutput<B> {
         self.forward(item)

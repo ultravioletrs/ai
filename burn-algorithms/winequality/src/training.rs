@@ -17,22 +17,22 @@ static ARTIFACT_DIR: &str = "winequality/artifacts/";
 
 #[derive(Config)]
 pub struct ExpConfig {
-    #[config(default = 100)]
-    pub num_epochs: usize,
-
-    #[config(default = 128)]
-    pub batch_size: usize,
-
-    #[config(default = 4)]
-    pub num_workers: usize,
-
-    #[config(default = 42)]
-    pub seed: u64,
-
     pub optimizer: SgdConfig,
 
+    #[config(default = 100)]
+    pub num_epochs: usize,
+    #[config(default = 5)]
+    pub stop_after_n_epochs: usize,
+    #[config(default = 128)]
+    pub batch_size: usize,
+    #[config(default = 4)]
+    pub num_workers: usize,
+    #[config(default = 42)]
+    pub seed: u64,
     #[config(default = 11)]
     pub input_feature_len: usize,
+    #[config(default = 5e-3)]
+    pub learning_rate: f64,
 }
 
 pub fn run<B: AutodiffBackend>(device: B::Device) {
@@ -71,12 +71,14 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
             Aggregate::Mean,
             Direction::Lowest,
             Split::Valid,
-            StoppingCondition::NoImprovementSince { n_epochs: 5 },
+            StoppingCondition::NoImprovementSince {
+                n_epochs: config.stop_after_n_epochs,
+            },
         ))
         .devices(vec![device.clone()])
         .num_epochs(config.num_epochs)
         .summary()
-        .build(model, config.optimizer.init(), 5e-3);
+        .build(model, config.optimizer.init(), config.learning_rate);
 
     let model_trained = learner.fit(dataloader_train, dataloader_test);
 

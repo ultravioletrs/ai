@@ -1,0 +1,24 @@
+[package]
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+name = "agnews"
+publish = false
+
+[features]
+ndarray = ["burn/ndarray"]
+wgpu = ["burn/wgpu"]
+
+
+[dependencies]
+burn = { version = "0.13.2", features = [
+    "dataset",
+    "fusion",
+    "ndarray",
+    "train",
+    "wgpu",
+] }
+csv = "1.3.0"
+derive-new = "0.6.0"
+serde = { version = "1.0.203", features = ["derive", "std"] }
+tokenizers = { version = "0.19.1", features = ["http", "onig"] }

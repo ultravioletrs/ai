@@ -1,0 +1,10 @@
+[package]
+name = "convert-image"
+version.workspace = true
+edition.workspace = true
+readme.workspace = true
+license.workspace = true
+description.workspace = true
+
+[dependencies]
+image = "0.25.1"

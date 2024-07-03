@@ -15,7 +15,7 @@ use burn::{
     },
 };
 
-static ARTIFACT_DIR: &str = "iris/artifacts/";
+static ARTIFACT_DIR: &str = "artifacts/iris/";
 
 #[derive(Config)]
 pub struct ExpConfig {

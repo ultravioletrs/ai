@@ -5,6 +5,7 @@ members = [
     "cifar10",
     "winequality",
     "iris",
+    "iris-wasm-inference",
     "agnews",
     "imdb",
 ]

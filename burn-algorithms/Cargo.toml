@@ -2,7 +2,9 @@
 members = [
     "addition",
     "addition-wasm-inference",
+    "convert-image",
     "mnist",
+    "mnist-wasm-inference",
     "cifar10",
     "winequality",
     "iris",

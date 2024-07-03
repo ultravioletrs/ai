@@ -15,7 +15,7 @@ use burn::{
     },
 };
 
-static ARTIFACT_DIR: &str = "artifacts/";
+static ARTIFACT_DIR: &str = "artifacts/mnist/";
 
 #[derive(Config)]
 pub struct MnistTrainingConfig {

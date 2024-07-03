@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "addition",
+    "addition-wasm-inference",
     "mnist",
     "cifar10",
     "winequality",

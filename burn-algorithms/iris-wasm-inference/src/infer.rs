@@ -13,7 +13,7 @@ pub struct IrisItem {
 pub async fn inference(iris_item: IrisItem) -> &'static str {
     let model = Some(build_and_load_model());
 
-    let model = model.as_ref().unwrap();
+    let model = model.as_ref().expect("Model not found");
 
     let device = Default::default();
 

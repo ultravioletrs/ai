@@ -370,7 +370,7 @@ The output should be something like:
 
 ## Inference
 
-For inference, we use the [wasmtime](https://wasmtime.dev/) runtime to run the WebAssembly binary generated from the Rust code. This is because it run webassembly code outside the browser and can be used as a command-line utility.
+For inference, we use the [wasmtime](https://wasmtime.dev/) runtime to run the WebAssembly binary generated from the Rust code. This is because it runs webassembly code outside the browser and can be used as a command-line utility.
 
 We need it to run outside the browser because we are running machine learning models that require a lot of computation and memory. The browser might not be able to handle the computation and memory requirements of the models. Above that, we are building this to be used inside a Trusted Execution Environment (TEE) like Intel SGX, which is a hardware-based security technology that can help protect your data and code while it is being processed.
 

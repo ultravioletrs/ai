@@ -1,0 +1,57 @@
+name: Rust CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./burn-algorithms
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Populate model files
+        run: |
+          mkdir -p artifacts/iris && touch artifacts/iris/model.bin
+          mkdir -p artifacts/mnist && touch artifacts/mnist/model.bin
+
+      - name: Check cargo
+        run: cargo check --release --all-targets --all-features
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run linter
+        run: cargo clippy -- -D warnings
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Build with ndarray feature
+        run: cargo build --release --features ndarray
+
+      - name: Build with wgpu feature
+        run: cargo build --release --features wgpu
+
+      - name: Add wasm32-wasi target
+        run: rustup target add wasm32-wasip1
+
+      - name: Build addition-wasm-inference with wasm32-wasi target
+        run: cd addition-wasm-inference && cargo build --release --target wasm32-wasip1
+
+      - name: Build mnist-wasm-inference with wasm32-wasi target
+        run: cd mnist-wasm-inference && cargo build --release --target wasm32-wasip1
+
+      - name: Build iris-wasm-inference with wasm32-wasi target
+        run: cd iris-wasm-inference && cargo build --release --target wasm32-wasip1

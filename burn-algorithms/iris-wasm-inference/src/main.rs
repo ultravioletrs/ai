@@ -1,6 +1,5 @@
 use futures::executor;
 use iris_wasm_inference::infer::{inference, IrisItem};
-use serde_json;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

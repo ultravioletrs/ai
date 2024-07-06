@@ -16,7 +16,9 @@ The following examples are available:
 - [x] Text Classification - (AG News dataset)
 - [x] Text Classification - (IMDB dataset)
 
-## Addition
+## Training
+
+### Addition
 
 This is a simple matrix addition example. It adds two matrices and prints the result.
 
@@ -67,7 +69,7 @@ Tensor {
 }
 ```
 
-## Iris dataset
+### Iris dataset
 
 The dataset is already downloaded and stored in the `data` folder inside the `iris` folder.
 
@@ -123,7 +125,7 @@ Total Epochs: 100
 | Valid | Loss     | 0.031    | 92       | 0.837    | 1        |
 ```
 
-## Wine Quality dataset
+### Wine Quality dataset
 
 First, download the dataset from <https://archive.ics.uci.edu/dataset/186/wine+quality> and extract it in the `data` folder inside the `winequality` folder.
 
@@ -187,7 +189,7 @@ Total Epochs: 100
 | Valid | Loss   | 0.042    | 100      | 0.110    | 1        |
 ```
 
-## MNIST dataset
+### MNIST dataset
 
 First, download the dataset from <https://www.kaggle.com/datasets/playlist/mnistzip/data?select=mnist_png> and extract it in the `data` folder inside the `mnist` folder.
 
@@ -246,7 +248,7 @@ The output should be something like:
 
 ```
 
-## Cifar-10 dataset
+### Cifar-10 dataset
 
 First, download the dataset from <https://s3.amazonaws.com/fast-ai-sample/cifar10.tgz> and extract it in the `data` folder inside the `cifar10` folder.
 
@@ -286,7 +288,7 @@ The output should be something like:
 
 ```
 
-## AG News
+### AG News
 
 First, download the dataset from <https://s3.amazonaws.com/fast-ai-nlp/ag_news_csv.tgz> and extract it in the `data` folder inside the `imdb` folder.
 
@@ -326,7 +328,7 @@ The output should be something like:
 
 ```
 
-## IMDB
+### IMDB
 
 First, download the dataset from <https://huggingface.co/datasets/scikit-learn/imdb> and extract it in the `data` folder inside the `imdb` folder.
 
@@ -366,8 +368,137 @@ The output should be something like:
 
 ```
 
+## Inference
+
+For inference, we use the [wasmtime](https://wasmtime.dev/) runtime to run the WebAssembly binary generated from the Rust code. This is because it runs webassembly code outside the browser and can be used as a command-line utility.
+
+We need it to run outside the browser because we are running machine learning models that require a lot of computation and memory. The browser might not be able to handle the computation and memory requirements of the models. Above that, we are building this to be used inside a Trusted Execution Environment (TEE) like Intel SGX, which is a hardware-based security technology that can help protect your data and code while it is being processed.
+
+For the following examples to work, you need to have the `wasmtime` runtime installed on your machine. You can download it from <https://wasmtime.dev/>. Also, make sure you have the `wasm32-wasip1` target installed on your machine.
+
+```bash
+rustup target add wasm32-wasip1
+```
+
+To install `wasmtime` on a unix machine, you can use the following command:
+
+```bash
+curl https://wasmtime.dev/install.sh -sSf | bash
+```
+
+### Addition on wasm
+
+This is a simple matrix addition example that runs on WebAssembly. It adds two matrices and prints the result.
+
+To run the example, use the following command:
+
+From `burn-algorithms` root directory run:
+
+```bash
+cd addition-wasm-inference
+```
+
+```bash
+cargo build --release --target wasm32-wasip1 --bin addition-wasm-inference
+```
+
+```bash
+wasmtime ../target/wasm32-wasip1/release/addition-wasm-inference.wasm '[[2.0, 3.0], [4.0, 5.0]]' '[[1.0, 1.0], [1.0, 1.0]]'
+```
+
+Matrix A: `[[2.0, 3.0], [4.0, 5.0]]`
+Matrix B: `[[1.0, 1.0], [1.0, 1.0]]`
+
+The output should be something like:
+
+```bash
+[3.0, 4.0, 5.0, 6.0]
+```
+
+### Iris dataset classification on wasm
+
+This is a simple classification example that runs on WebAssembly. It classifies the Iris dataset and prints the result.
+
+To run the example, use the following command:
+
+From `burn-algorithms` root directory run:
+
+```bash
+cd iris-wasm-inference
+```
+
+```bash
+cargo build --release --target wasm32-wasip1 --bin iris-wasm-inference
+```
+
+```bash
+wasmtime ../target/wasm32-wasip1/release/iris-wasm-inference.wasm '{"sepal_length": 7.0, "sepal_width": 3.2, "petal_length": 4.7, "petal_width": 1.4}'
+```
+
+The first and only argument is the input data in JSON format for example:
+
+```bash
+{"sepal_length": 7.0,"sepal_width": 3.2,"petal_length": 4.7,"petal_width": 1.4}
+```
+
+The output should be something like:
+
+```bash
+Iris-versicolor
+```
+
+### MNIST Image classification on wasm
+
+This is a simple image classification example that runs on WebAssembly. It classifies the MNIST dataset and prints the result.
+
+To run the example, use the following command:
+
+From `burn-algorithms` root directory run:
+
+```bash
+cargo r --release --bin convert-image mnist-wasm-inference/0.png
+```
+
+This will convert the image to any array that can be used as input to the model.
+
+The output should be something like:
+
+```bash
+  Compiling convert-image v0.1.0 (/home/rodneyosodo/code/ultraviolet/ai/burn-algorithms/convert-image)
+  Finished `release` profile [optimized] target(s) in 1.93s
+  Running `target/release/convert-image mnist-wasm-inference/0.png`
+
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 67.0, 232.0, 39.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 62.0, 81.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 120.0, 180.0, 39.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 126.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 153.0, 210.0, 40.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 220.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 27.0, 254.0, 162.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 222.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 183.0, 254.0, 125.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 46.0, 245.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 198.0, 254.0, 56.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 120.0, 254.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 23.0, 231.0, 254.0, 29.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 159.0, 254.0, 120.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 163.0, 254.0, 216.0, 16.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 159.0, 254.0, 67.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 86.0, 178.0, 248.0, 254.0, 91.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 159.0, 254.0, 85.0, 0.0, 0.0, 0.0, 47.0, 49.0, 116.0, 144.0, 150.0, 241.0, 243.0, 234.0, 179.0, 241.0, 252.0, 40.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 150.0, 253.0, 237.0, 207.0, 207.0, 207.0, 253.0, 254.0, 250.0, 240.0, 198.0, 143.0, 91.0, 28.0, 5.0, 233.0, 250.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 119.0, 177.0, 177.0, 177.0, 177.0, 177.0, 98.0, 56.0, 0.0, 0.0, 0.0, 0.0, 0.0, 102.0, 254.0, 220.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 137.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 57.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 57.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 255.0, 94.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 96.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 153.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 255.0, 153.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 96.0, 254.0, 153.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+```
+
+Use the output as input to the model.
+
+From `burn-algorithms` root directory run:
+
+```bash
+cd mnist-wasm-inference
+```
+
+```bash
+cargo build --release --target wasm32-wasip1 --bin mnist-wasm-inference
+```
+
+```bash
+wasmtime ../target/wasm32-wasip1/release/mnist-wasm-inference.wasm '[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 67.0, 232.0, 39.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 62.0, 81.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 120.0, 180.0, 39.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 126.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 153.0, 210.0, 40.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 220.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 27.0, 254.0, 162.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 222.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 183.0, 254.0, 125.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 46.0, 245.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 198.0, 254.0, 56.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 120.0, 254.0, 163.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 23.0, 231.0, 254.0, 29.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 159.0, 254.0, 120.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 163.0, 254.0, 216.0, 16.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 159.0, 254.0, 67.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 86.0, 178.0, 248.0, 254.0, 91.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 159.0, 254.0, 85.0, 0.0, 0.0, 0.0, 47.0, 49.0, 116.0, 144.0, 150.0, 241.0, 243.0, 234.0, 179.0, 241.0, 252.0, 40.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 150.0, 253.0, 237.0, 207.0, 207.0, 207.0, 253.0, 254.0, 250.0, 240.0, 198.0, 143.0, 91.0, 28.0, 5.0, 233.0, 250.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 119.0, 177.0, 177.0, 177.0, 177.0, 177.0, 98.0, 56.0, 0.0, 0.0, 0.0, 0.0, 0.0, 102.0, 254.0, 220.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 137.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 57.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 57.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 255.0, 94.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 96.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 254.0, 153.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 169.0, 255.0, 153.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 96.0, 254.0, 153.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]'
+```
+
+The first and only argument is the input data in the form of a JSON array.
+
+The output should be something like:
+
+```bash
+4
+```
+
 ## References
 
 - [Burn-Github](https://burn.dev/)
 - [Burn-Documentation](https://burn.dev/docs/burn/)
 - [Burn-Book](https://burn.dev/book/)
+- [Wasmtime](https://wasmtime.dev/)
+- [wasm32-wasip1](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1.html#wasm32-wasip1)

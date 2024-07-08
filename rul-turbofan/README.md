@@ -60,14 +60,11 @@ Fault Modes: TWO (HPC Degradation, Fan Degradation)
 
 The goal of using this dataset is to leverage these measurements and settings to predict the Remaining Useful Life (RUL) of the engines accurately.
 
-
-
 ## Model Architecture
 The model architecture is based on LSTM (Long Short Term Memory), which is well-suited for time series prediction tasks. 
 To train and evaluate the model, run the following command:
 
 `python RUL_training.py`
-
 
 ## Results
 
@@ -76,9 +73,6 @@ The performance of the model is evaluated using metrics such as Mean Squared Err
 After the training process is completed, the algorithm saves the trained model to a file. This allows you to reuse the model for predictions without needing to retrain it each time. The model is saved in a `pth` format. Additionally, it generates graphs of training loss and validation loss over epochs to help visualize the model's learning process. This helps in visualizing the learning process and diagnosing potential issues like overfitting.
 
 ![](Val_R2.png)
-
-
-
 
 To use model, run:
 
@@ -90,9 +84,6 @@ This plot helps in understanding how well the model predicts the Remaining Usefu
 Here's an example of how the plot might look:
 
 ![](RUL.png)
-
-
-
 
 In this plot:
 

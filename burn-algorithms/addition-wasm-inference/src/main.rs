@@ -5,7 +5,6 @@ use burn::{
     tensor::{backend::Backend, Tensor},
 };
 use futures::executor;
-use serde_json;
 
 pub async fn addition<B: Backend>(
     a: [[f32; 2]; 2],
@@ -27,8 +26,10 @@ pub async fn addition<B: Backend>(
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let a: [[f32; 2]; 2] = serde_json::from_str(&args[1]).expect("Please provide a valid JSON input for example: [[1.0, 2.0], [3.0, 4.0]]");
-    let b: [[f32; 2]; 2] = serde_json::from_str(&args[2]).expect("Please provide a valid JSON input for example: [[1.0, 2.0], [3.0, 4.0]]");
+    let a: [[f32; 2]; 2] = serde_json::from_str(&args[1])
+        .expect("Please provide a valid JSON input for example: [[1.0, 2.0], [3.0, 4.0]]");
+    let b: [[f32; 2]; 2] = serde_json::from_str(&args[2])
+        .expect("Please provide a valid JSON input for example: [[1.0, 2.0], [3.0, 4.0]]");
     let result: Data<f32, 2> = executor::block_on(addition::<burn::backend::NdArray>(a, b));
     println!("{:}", result);
 }

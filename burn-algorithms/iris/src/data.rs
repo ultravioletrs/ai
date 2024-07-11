@@ -36,8 +36,8 @@ pub struct IrisDataset {
     dataset: PartialData,
 }
 
-fn class_label(class: &String) -> i8 {
-    match class.as_str() {
+fn class_label(class: &str) -> i8 {
+    match class {
         "Iris-setosa" => 0,
         "Iris-versicolor" => 1,
         "Iris-virginica" => 2,

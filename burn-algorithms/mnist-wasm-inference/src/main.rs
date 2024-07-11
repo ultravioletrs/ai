@@ -1,6 +1,5 @@
 use futures::executor;
 use mnist_wasm_inference::infer::inference;
-use serde_json;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

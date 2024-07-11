@@ -71,9 +71,7 @@ impl AgNewsDataset {
         let mut rdr = csv::ReaderBuilder::new();
         let rdr = rdr.delimiter(b',');
 
-        let dataset = InMemDataset::from_csv(csv_file, rdr).unwrap();
-
-        dataset
+        InMemDataset::from_csv(csv_file, rdr).unwrap()
     }
 }
 

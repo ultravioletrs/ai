@@ -1,4 +1,4 @@
-#[cfg(any(feature = "ndarray"))]
+#[cfg(feature = "ndarray")]
 mod ndarray {
     use burn::backend::{
         ndarray::{NdArray, NdArrayDevice},
@@ -27,7 +27,7 @@ mod wgpu {
 }
 
 fn main() {
-    #[cfg(any(feature = "ndarray"))]
+    #[cfg(feature = "ndarray")]
     ndarray::run();
     #[cfg(feature = "wgpu")]
     wgpu::run();

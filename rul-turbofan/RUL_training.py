@@ -8,6 +8,8 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import MinMaxScaler
 import joblib
 import matplotlib.pyplot as plt
+import os
+import zipfile
 
 # Load datasets
 train_df = pd.read_csv('train_FD001.txt', sep=r'\s+', header=None)
@@ -50,40 +52,6 @@ class TurbofanDataset(Dataset):
         sequence = unit_data.iloc[start:start + self.sequence_length].drop(columns=['id', 'cycle', 'RUL']).values
         target = unit_data.iloc[start + self.sequence_length - 1]['RUL']
         return torch.tensor(sequence, dtype=torch.float32), torch.tensor(target, dtype=torch.float32)
-
-# Data visualization
-def visualize_data(df):
-    plt.figure(figsize=(16, 8))
-
-    # Settings
-    plt.subplot(3, 1, 1)
-    plt.plot(df['setting1'], label='setting1')
-    plt.plot(df['setting2'], label='setting2')
-    plt.plot(df['setting3'], label='setting3')
-    plt.title('Settings')
-    plt.ylabel('Value')
-    plt.legend()
-
-    # Sensors values
-    plt.subplot(3, 1, 2)
-    for i in range(1, 22):
-        plt.plot(df['s{}'.format(i)], label='s{}'.format(i))
-    plt.title('Sensors values')
-    plt.ylabel('Values')
-    plt.legend(loc='upper right', ncol=3, fontsize='small')
-
-    # RUL
-    plt.subplot(3, 1, 3)
-    plt.plot(df['RUL'], label='RUL', color='red')
-    plt.title('Remaining useful life (RUL)')
-    plt.xlabel('Index')
-    plt.ylabel('Value')
-    plt.legend()
-
-    plt.tight_layout()
-    plt.show()
-
-visualize_data(train_df)
 
 # Definition of LSTM model
 class LSTMModel(nn.Module):
@@ -190,12 +158,10 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
 
     return train_losses, val_losses, val_r2_scores
 
-# Starting training
 num_epochs = 100
 target_r2_score = 0.82
 train_losses, val_losses, val_r2_scores = train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs, target_r2_score)
 
-# Plot the training history
 def plot_training_history(train_losses, val_losses, val_r2_scores):
     epochs = range(1, len(train_losses) + 1)
 
@@ -219,7 +185,18 @@ def plot_training_history(train_losses, val_losses, val_r2_scores):
     plt.legend()
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig('training_history.png')
+    plt.close()
 
-# Plot the training history
 plot_training_history(train_losses, val_losses, val_r2_scores)
+
+# Create a zip file containing model.pth and training_history.png
+with zipfile.ZipFile('result.zip', 'w') as zipf:
+    zipf.write('model.pth')
+    zipf.write('training_history.png')
+
+# Cleanup
+os.remove('model.pth')
+os.remove('training_history.png')
+
+print("Zipped the model and training history plot into result.zip")

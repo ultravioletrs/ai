@@ -6,6 +6,8 @@ import joblib
 import seaborn as sns
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, Dataset
+import os
+import zipfile
 
 # Load datasets
 test_df = pd.read_csv('test_FD003.txt', sep=r'\s+', header=None)
@@ -126,8 +128,7 @@ with torch.no_grad():
 
 result_df = pd.DataFrame(results, columns=['id', 'cycle', 'RUL', 'Predicted_RUL'])
 
-# Visualize actual vs predicted RUL
-def visualize_actual_vs_predicted(df):
+def visualize_and_save(df, save_path):
     plt.figure(figsize=(20, 10))
     sns.set_style('whitegrid')
     
@@ -139,6 +140,17 @@ def visualize_actual_vs_predicted(df):
     plt.title('Actual vs Predicted Remaining Useful Life (RUL)')
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig(save_path)
+    plt.close()
 
-visualize_actual_vs_predicted(result_df)
+output_file = 'result-plot.png'
+visualize_and_save(result_df, output_file)
+
+# Define the name for the zip file
+zip_filename = 'predictions.zip'
+
+# Zip the file
+with zipfile.ZipFile(zip_filename, 'w') as zipf:
+    zipf.write(output_file, os.path.basename(output_file))
+
+print(f"Plot saved as '{output_file}' and zipped successfully as '{zip_filename}'.")

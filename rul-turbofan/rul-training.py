@@ -55,33 +55,37 @@ class TurbofanDataset(Dataset):
 
 # Definition of LSTM model
 class LSTMModel(nn.Module):
+    
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim):
         super(LSTMModel, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.num_layers = num_layers
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True, dropout=0.5)
-        self.fc = nn.Linear(hidden_dim, output_dim)
+        self.hidden_dim = hidden_dim # Number of features in the hidden state
+        self.num_layers = num_layers # Number of recurrent layers in the LSTM
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True, dropout=0.5) # LSTM layer
+        self.fc = nn.Linear(hidden_dim, output_dim)  # Fully connected layer for output
 
     def forward(self, x):
+        # Initialize hidden state and cell state with zeros
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(x.device)
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(x.device)
+         # Get the output from the LSTM layer
         out, _ = self.lstm(x, (h0, c0))
+         # Pass the output of the last time step through the fully connected layer
         out = self.fc(out[:, -1, :])
         return out
 
 # Training settings
-sequence_length = 50
-input_dim = len(cols_normalize)  # Number of input features
-hidden_dim = 128  # Number of hidden units
-num_layers = 3  # Number of LSTM layers
-output_dim = 1  # Output dimension
+sequence_length = 50 # Number of time steps in each sequence (experimentally chosen)
+input_dim = len(cols_normalize)  # Number of input features 
+hidden_dim = 128  # Number of hidden units (experimentally chosen)
+num_layers = 3  # Number of LSTM layers (experimentally chosen)
+output_dim = 1  # Single output for RUL prediction
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # Model initialization and training settings
 model = LSTMModel(input_dim, hidden_dim, num_layers, output_dim)
 model = model.to(device)
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-5) # Adam optimizer with learning rate 0.0001 and weight decay applied to model parameters to prevent overfitting
 
 # Training data
 train_dataset = TurbofanDataset(train_df, sequence_length)
@@ -92,14 +96,16 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, drop_last=
 val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, drop_last=True, num_workers=4)
 
 # Model training
-def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs, target_r2_score=0.82):
+def train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs, target_r2_score=0.82): #early stopping criteria, r2 score is set to 0.82
     train_losses = []
     val_losses = []
     val_r2_scores = []
     early_stopping_patience = 10
     early_stopping_counter = 0
     best_val_loss = float('inf')
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.5)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.5) # min': Monitoring mode, learning rate will be adjusted based on minimizing validation loss
+#patience: Number of epochs with no improvement after which learning rate will be reduced
+#factor: Factor by which the learning rate will be reduced. New learning rate = old learning rate * factor
 
     for epoch in range(num_epochs):
         model.train()
@@ -111,7 +117,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
             outputs = model(sequences)
             loss = criterion(outputs.squeeze(), targets)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # Maximum norm value beyond which gradients are clipped to prevent them from growing too large
             optimizer.step()
             running_loss += loss.item()
 
@@ -159,7 +165,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
     return train_losses, val_losses, val_r2_scores
 
 num_epochs = 100
-target_r2_score = 0.82
+target_r2_score = 0.82 #r2 score is set to 0.82
 train_losses, val_losses, val_r2_scores = train_model(model, train_loader, val_loader, criterion, optimizer, num_epochs, target_r2_score)
 
 def plot_training_history(train_losses, val_losses, val_r2_scores):

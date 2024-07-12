@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 test_df = pd.read_csv('test_FD003.txt', sep=r'\s+', header=None)
 rul_df = pd.read_csv('RUL_FD003.txt', sep=r'\s+', header=None)
 
-column_names = ['id', 'cycle'] + ['setting1', 'setting2', 'setting3'] + ['s' + str(i) for i in range(1, 22)]
+column_names = ['id', 'cycle'] + ['setting1', 'setting2', 'setting3'] + ['s' + str(i) for i in range(1, 22)] # column names include 's1' to 's21', covering 21 columns in total.
 test_df.columns = column_names
 rul_df.columns = ['RUL']
 
@@ -61,29 +61,53 @@ class TurbofanTestDataset(Dataset):
 class LSTMModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim):
         super(LSTMModel, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.num_layers = num_layers
+        
+        # Initialize the dimensions of the LSTM and fully connected layers
+        self.hidden_dim = hidden_dim  # Hidden dimension size of the LSTM
+        self.num_layers = num_layers  # Number of LSTM layers
+        
+        # Define the LSTM layer
         self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True, dropout=0.5)
+        
+        # Define the fully connected output layer
         self.fc = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
+        # Initialize the initial hidden and cell states for the LSTM
         h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(x.device)
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(x.device)
+        
+        # Forward pass through the LSTM layer
         out, _ = self.lstm(x, (h0, c0))
+        
+        # Get the output from the last time step and pass it through the fully connected layer
         out = self.fc(out[:, -1, :])
+        
         return out
 
-# Set device and load the model
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-input_dim = len(cols_normalize)
-hidden_dim = 128
-num_layers = 3
-output_dim = 1
-sequence_length = 50
 
+# Set device based on availability of CUDA (GPU)
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+# Determine the input dimension for the LSTM model
+input_dim = len(cols_normalize)  # Number of input features after normalization
+
+# Define the dimensions for the LSTM model
+hidden_dim = 128  # Number of hidden units in the LSTM layer
+num_layers = 3  # Number of layers in the LSTM
+output_dim = 1  # Dimension of the output from the LSTM (predicted RUL)
+sequence_length = 50  # Length of the input sequences fed into the LSTM
+
+# Instantiate the LSTM model
 model = LSTMModel(input_dim, hidden_dim, num_layers, output_dim)
+
+# Load the trained model's state dictionary from a saved file
 model.load_state_dict(torch.load('model.pth', map_location=device))
+
+# Move the model to the appropriate device (GPU or CPU)
 model = model.to(device)
+
+# Set the model in evaluation mode
 model.eval()
 
 # Prepare test dataset and dataloader

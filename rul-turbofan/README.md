@@ -24,10 +24,10 @@ or you can also download datasets here:
 
 The NASA CMAPSS dataset includes the following key components:
 
-- Engine ID: Identifies the specific engine.( Typical sensors include Fan Speed, Pressure, Temperature, Flow rates)
-- Cycle: The time cycle for the recorded measurements.
-- Setting 1, 2, 3: These are the operational settings that influence the engine's performance.
-- Sensor 1 to Sensor 21: These columns represent various sensor measurements monitoring different parameters of the engine.
+- **Engine ID**: Identifies the specific engine. Typical sensors include Fan Speed, Pressure, Temperature, Flow rates.
+- **Cycle**: The time cycle for the recorded measurements.
+- **Setting 1, 2, 3**: These are the operational settings that influence the engine's performance.
+- **Sensor 1 to Sensor 21**: These columns represent various sensor measurements monitoring different parameters of the engine.
 
 Dataset is divided into four data sets:
 
@@ -72,7 +72,7 @@ The performance of the model is evaluated using metrics such as Mean Squared Err
 
 After the training process is completed, the algorithm saves the trained model to a file. This allows you to reuse the model for predictions without needing to retrain it each time. The model is saved in a `pth` format. Additionally, it generates graphs of training loss and validation loss over epochs to help visualize the model's learning process. This helps in visualizing the learning process and diagnosing potential issues like overfitting.
 
-![](Val_R2.png)
+![](images/val-r2.png)
 
 To use model, run:
 
@@ -83,7 +83,7 @@ Visualize Predictions: After running the script, it will generate a plot showing
 This plot helps in understanding how well the model predicts the Remaining Useful Life.
 Here's an example of how the plot might look:
 
-![](RUL.png)
+![](images/rul.png)
 
 In this plot:
 

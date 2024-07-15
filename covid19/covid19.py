@@ -21,12 +21,14 @@ def prepare_test_set(root_dir, class_names):
         os.mkdir(os.path.join(test_dir, class_name))
     
     for class_name in class_names:
-        images = [x for x in os.listdir(os.path.join(root_dir, class_name, "images")) if x.lower().endswith('png')]
-        selected_images = random.sample(images, 30)
-        for image in selected_images:
-            source_path = os.path.join(root_dir, class_name, "images", image)
-            target_path = os.path.join(test_dir, class_name, image)
-            shutil.copy(source_path, target_path)
+        class_dir = os.path.join(root_dir, class_name)
+        if os.path.exists(class_dir):
+            images = [x for x in os.listdir(class_dir) if x.lower().endswith('png')]
+            selected_images = random.sample(images, min(30, len(images)))
+            for image in selected_images:
+                source_path = os.path.join(class_dir, image)
+                target_path = os.path.join(test_dir, class_name, image)
+                shutil.copy(source_path, target_path)
     
     return test_dir
 
@@ -35,7 +37,8 @@ class ChestXRayDataset(torch.utils.data.Dataset):
         def get_images(class_name):
             images = []
             for dir_path in image_dirs[class_name]:
-                images += [os.path.join(dir_path, x) for x in os.listdir(dir_path) if x.lower().endswith('png')]
+                if os.path.exists(dir_path):
+                    images += [os.path.join(dir_path, x) for x in os.listdir(dir_path) if x.lower().endswith('png')]
             print(f'Found {len(images)} {class_name} examples')
             return images
 
@@ -90,7 +93,6 @@ def train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, ep
                 val_loss /= (val_step + 1)
                 accuracy = accuracy / len(dl_test.dataset)
                 print(f'Validation Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}')
-                #show_preds()
                 resnet18.train()
                 if accuracy >= 0.95:
                     print('Performance condition satisfied, stopping..')
@@ -102,12 +104,12 @@ def train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, ep
     torch.save(resnet18.state_dict(), model_file_name)
 
 def main():
-    hospitals_zip = []
-    for i, arg in enumerate(sys.argv[2:]):
-        hospitals_zip.append(arg)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data_dirs', nargs='+', help='Directories containing hospital data or zip files')
+    parser.add_argument('--model', default='model.pth', help='Filename to save the trained model')
+    args = parser.parse_args()
 
-    model_file_name = "model.pth"
-
+    model_file_name = args.model
     class_names = ['Normal', 'Viral Pneumonia', 'COVID']
 
     # Combine datasets from multiple hospitals
@@ -125,21 +127,22 @@ def main():
 
     hospital_path = '/tmp/work'
     if not os.path.isdir(hospital_path):
-        os.mkdir(hospital_path, mode = 0o777)
+        os.mkdir(hospital_path, mode=0o777)
     
-    for hospital in hospitals_zip:
-        with zipfile.ZipFile(hospital, 'r') as zip_ref:
-            zip_ref.extractall(hospital_path)
-
     hospitals = []
-    for hospital in os.listdir(hospital_path):
-        hospitals.append(os.path.join(hospital_path, hospital))    
+    for data_dir in args.data_dirs:
+        if zipfile.is_zipfile(data_dir):
+            with zipfile.ZipFile(data_dir, 'r') as zip_ref:
+                zip_ref.extractall(hospital_path)
+            hospitals.append(os.path.join(hospital_path, os.path.basename(data_dir).replace('.zip', '')))
+        else:
+            hospitals.append(data_dir)
 
     # Prepare combined training dataset
     train_dirs = {class_name: [] for class_name in class_names}
     for hospital in hospitals:
         for class_name in class_names:
-            train_dirs[class_name].append(os.path.join(hospital, class_name, 'images'))
+            train_dirs[class_name].append(os.path.join(hospital, class_name))
 
     train_image_dirs = {class_name: train_dirs[class_name] for class_name in class_names}
     train_dataset = ChestXRayDataset(train_image_dirs, train_transform)

@@ -20,7 +20,7 @@ This will create `data` directory with datasets divided in 3 hospitals (`h1`, `h
 Do do the training, execute:
 
 ```bash
-python covid19.py h1 h2 h3 --model model.pth
+python covid19.py h1 h2 h3 
 ```
 
 ### Test Model

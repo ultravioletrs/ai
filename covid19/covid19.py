@@ -168,25 +168,6 @@ def main():
 
     train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, epochs=1)
 
-    # Define the path for the Unix domain socket
-    socket_path = sys.argv[1]
-
-    # Create a Unix domain socket client
-    client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
-    try:
-        # Connect to the server
-        client.connect(socket_path)
-
-        # Send the serialized model over the socket
-        with open(model_file_name, 'rb') as f:
-            data = f.read()
-            client.sendall(data)
-
-    finally:
-        # Close the socket
-        client.close()
-
 if __name__ == '__main__':
     ssl._create_default_https_context = ssl._create_unverified_context
     main()

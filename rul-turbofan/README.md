@@ -91,14 +91,3 @@ In this plot:
 - The y-axis represents the Remaining Useful Life (RUL).
 
 The blue curve represents the actual RUL, while the red curve represents the predicted RUL. This visualization helps assess how well the model predicts the RUL compared to the ground truth.
-
-
-
-
-
-
-
-
-
-
-

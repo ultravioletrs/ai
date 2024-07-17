@@ -10,10 +10,16 @@ pub struct IrisItem {
     pub petal_width: f32,
 }
 
-pub async fn inference(iris_item: IrisItem) -> &'static str {
-    let model = Some(build_and_load_model());
+pub async fn inference(iris_item: IrisItem) -> Result<&'static str, String> {
+    let model = match build_and_load_model() {
+        Ok(model) => Some(model),
+        Err(e) => return Err(e),
+    };
 
-    let model = model.as_ref().expect("Model not found");
+    let model = match model.as_ref() {
+        Some(model) => model,
+        None => return Err("Model not found".to_string()),
+    };
 
     let device = Default::default();
 
@@ -36,7 +42,7 @@ pub async fn inference(iris_item: IrisItem) -> &'static str {
     #[cfg(target_family = "wasm")]
     let class: i64 = max_index.into_scalar().await;
 
-    label_to_class(class)
+    Ok(label_to_class(class))
 }
 
 fn label_to_class(label: i64) -> &'static str {

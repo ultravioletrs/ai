@@ -1,5 +1,5 @@
 use futures::executor;
-use mnist_wasm_inference::infer::inference;
+use mnist_inference::infer::inference;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

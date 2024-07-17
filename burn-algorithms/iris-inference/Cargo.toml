@@ -1,5 +1,5 @@
 [package]
-name = "addition-wasm-inference"
+name = "iris-inference"
 version.workspace = true
 edition.workspace = true
 readme.workspace = true

@@ -1,14 +1,14 @@
 [workspace]
 members = [
     "addition",
-    "addition-wasm-inference",
+    "addition-inference",
     "convert-image",
     "mnist",
-    "mnist-wasm-inference",
+    "mnist-inference",
     "cifar10",
     "winequality",
     "iris",
-    "iris-wasm-inference",
+    "iris-inference",
     "agnews",
     "imdb",
 ]

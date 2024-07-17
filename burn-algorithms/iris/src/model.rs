@@ -1,6 +1,7 @@
 use crate::data::IrisBatch;
 use burn::{
     nn::loss::CrossEntropyLossConfig,
+    nn::{Linear, LinearConfig, Relu},
     prelude::*,
     tensor::backend::AutodiffBackend,
     train::{ClassificationOutput, TrainOutput, TrainStep, ValidStep},
@@ -8,10 +9,10 @@ use burn::{
 
 #[derive(Module, Debug)]
 pub struct ClassificationModel<B: Backend> {
-    input_layer: nn::Linear<B>,
-    hidden_layer: nn::Linear<B>,
-    activation: nn::Relu,
-    output_layer: nn::Linear<B>,
+    input_layer: Linear<B>,
+    hidden_layer: Linear<B>,
+    activation: Relu,
+    output_layer: Linear<B>,
 }
 
 #[derive(Config)]
@@ -22,20 +23,20 @@ pub struct ClassificationModelConfig {
 
 impl ClassificationModelConfig {
     pub fn init<B: Backend>(&self, device: &B::Device) -> ClassificationModel<B> {
-        let input_layer = nn::LinearConfig::new(self.input_size, self.hidden_size)
+        let input_layer = LinearConfig::new(self.input_size, self.hidden_size)
             .with_bias(true)
             .init(device);
-        let hidden_layer = nn::LinearConfig::new(self.hidden_size, self.hidden_size / 2)
+        let hidden_layer = LinearConfig::new(self.hidden_size, self.hidden_size / 2)
             .with_bias(true)
             .init(device);
-        let output_layer = nn::LinearConfig::new(self.hidden_size / 2, 3)
+        let output_layer = LinearConfig::new(self.hidden_size / 2, 3)
             .with_bias(true)
             .init(device);
 
         ClassificationModel {
             input_layer,
             hidden_layer,
-            activation: nn::Relu::new(),
+            activation: Relu::new(),
             output_layer,
         }
     }

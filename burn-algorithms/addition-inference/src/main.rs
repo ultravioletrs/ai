@@ -6,7 +6,6 @@ use burn::{
 };
 use futures::executor;
 
-
 pub async fn addition<B: Backend>(
     a: [[f32; 2]; 2],
     b: [[f32; 2]; 2],

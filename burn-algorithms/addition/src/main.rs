@@ -3,7 +3,6 @@ use burn::{
     tensor::{backend::Backend, Tensor},
 };
 
-
 pub fn addition<B: Backend>(
     mut a: [[f32; 2]; 2],
     mut b: [[f32; 2]; 2],
@@ -56,7 +55,7 @@ pub fn run() {
 }
 
 #[cfg(feature = "wgpu")]
-pub fn run() {
+pub fn run_wgpu() {
     let a = [[2., 3.], [4., 5.]];
     let b = [[std::f32::consts::PI, 1.], [1., std::f32::consts::PI]];
     match addition::<burn::backend::Wgpu>(a, b) {
@@ -72,5 +71,5 @@ fn main() {
     #[cfg(any(feature = "ndarray", feature = "cocos"))]
     run();
     #[cfg(feature = "wgpu")]
-    run();
+    run_wgpu();
 }

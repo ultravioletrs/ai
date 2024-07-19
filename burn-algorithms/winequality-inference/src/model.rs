@@ -20,9 +20,7 @@ impl<B: Backend> Model<B> {
     pub fn new(device: &B::Device) -> Self {
         let input_layer = LinearConfig::new(11, 1).with_bias(true).init(device);
 
-        Model {
-            input_layer,
-        }
+        Model { input_layer }
     }
 
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {

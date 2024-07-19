@@ -25,6 +25,7 @@ jobs:
         run: |
           mkdir -p artifacts/iris && touch artifacts/iris/model.bin
           mkdir -p artifacts/mnist && touch artifacts/mnist/model.bin
+          mkdir -p artifacts/winequality && touch artifacts/winequality/model.bin
 
       - name: Check cargo
         run: cargo check --release --all-targets --all-features

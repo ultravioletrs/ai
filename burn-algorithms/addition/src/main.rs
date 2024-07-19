@@ -11,13 +11,13 @@ pub fn addition<B: Backend>(
     if cfg!(feature = "input") {
         let args: Vec<String> = std::env::args().collect();
         if args.len() < 3 {
-            return Err("Please provide two JSON inputs for example: '[[1.0, 2.0], [3.0, 4.0]]' '[[1.0, 2.0], [3.0, 4.0]]'".to_string());
+            return Err("Provide two JSON inputs for example: '[[1.0, 2.0], [3.0, 4.0]]' '[[1.0, 2.0], [3.0, 4.0]]'".to_string());
         }
         a = match serde_json::from_str(&args[1]) {
             Ok(a) => a,
             Err(e) => {
                 return Err(format!(
-                    "Please provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]': {}",
+                    "Provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]': {}",
                     e
                 ))
             }
@@ -26,7 +26,7 @@ pub fn addition<B: Backend>(
             Ok(b) => b,
             Err(e) => {
                 return Err(format!(
-                    "Please provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]': {}",
+                    "Provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]': {}",
                     e
                 ))
             }

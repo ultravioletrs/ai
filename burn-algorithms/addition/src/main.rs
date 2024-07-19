@@ -12,23 +12,23 @@ pub fn addition<B: Backend>(
         if args.len() < 3 {
             return Err("Provide two JSON inputs for example: '[[1.0, 2.0], [3.0, 4.0]]' '[[1.0, 2.0], [3.0, 4.0]]'".to_string());
         }
-        a = match serde_json::from_str(&args[1]) {
+        fn parse_json_input(args: Vec<String>) -> Result<[[f32; 2]; 2], String> {
+            match serde_json::from_str(&args[1]) {
+                Ok(a) => Ok(a),
+                Err(e) => Err(format!(
+                    "Invalid JSON input: {}. Provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]'",
+                    e
+                )),
+            }
+        }
+
+        a = match parse_json_input(args.clone()) {
             Ok(a) => a,
-            Err(e) => {
-                return Err(format!(
-                    "Provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]': {}",
-                    e
-                ))
-            }
+            Err(e) => return Err(e),
         };
-        b = match serde_json::from_str(&args[2]) {
+        b = match parse_json_input(args) {
             Ok(b) => b,
-            Err(e) => {
-                return Err(format!(
-                    "Provide a valid JSON input for example: '[[1.0, 2.0], [3.0, 4.0]]': {}",
-                    e
-                ))
-            }
+            Err(e) => return Err(e),
         };
     }
     let device = Default::default();

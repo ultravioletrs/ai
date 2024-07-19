@@ -10,7 +10,7 @@ fn main() {
     let deserialized: IrisItem = match serde_json::from_str(&args[1]) {
         Ok(a) => a,
         Err(e) => {
-            eprintln!("Provide a valid JSON input for example: {{\"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2}}: {}", e);
+            eprintln!("Invalid JSON input: {}. Provide a valid JSON input for example: {{\"sepal_length\": 5.1, \"sepal_width\": 3.5, \"petal_length\": 1.4, \"petal_width\": 0.2}}", e);
             std::process::exit(1);
         }
     };

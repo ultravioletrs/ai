@@ -11,7 +11,7 @@ fn main() {
         Ok(a) => a,
         Err(e) => {
             eprintln!(
-                "Provide a valid JSON input for example: [0.0, 0.0, ..., 0.0]: {}",
+                "Invalid JSON input: {}. Provide a valid JSON input for example: [0.0, 0.0, ..., 0.0]",
                 e
             );
             std::process::exit(1);

@@ -43,11 +43,14 @@ impl<B: Backend> Model<B> {
     }
 }
 
-pub fn build_and_load_model() -> Model<NDBackend> {
+pub fn build_and_load_model() -> Result<Model<NDBackend>, String> {
     let model: Model<NDBackend> = Model::new(&Default::default());
-    let record = BinBytesRecorder::<FullPrecisionSettings>::default()
+    let record = match BinBytesRecorder::<FullPrecisionSettings>::default()
         .load(STATE_ENCODED.to_vec(), &Default::default())
-        .expect("Failed to decode state");
+    {
+        Ok(record) => record,
+        Err(e) => return Err(format!("Failed to load model: {}", e)),
+    };
 
-    model.load_record(record)
+    Ok(model.load_record(record))
 }

@@ -25,6 +25,7 @@ pub struct IMDBItem {
     pub review: String,
     pub sentiment: String,
 }
+
 fn sentiment_to_label(sentiment: String) -> u8 {
     match sentiment.as_str() {
         "negative" => 0,

@@ -25,6 +25,7 @@ jobs:
         run: |
           mkdir -p artifacts/iris && touch artifacts/iris/model.bin
           mkdir -p artifacts/mnist && touch artifacts/mnist/model.bin
+          mkdir -p artifacts/winequality && touch artifacts/winequality/model.bin
 
       - name: Check cargo
         run: cargo check --release --all-targets --all-features
@@ -38,20 +39,20 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
-      - name: Build with ndarray feature
-        run: cargo build --release --features ndarray
-
-      - name: Build with wgpu feature
-        run: cargo build --release --features wgpu
+      - name: Build for all features
+        run: cargo build --release --all-features
 
       - name: Add wasm32-wasi target
         run: rustup target add wasm32-wasip1
 
-      - name: Build addition-wasm-inference with wasm32-wasi target
-        run: cd addition-wasm-inference && cargo build --release --target wasm32-wasip1
+      - name: Build addition-inference with wasm32-wasi target
+        run: cd addition-inference && cargo build --release --target wasm32-wasip1
 
-      - name: Build mnist-wasm-inference with wasm32-wasi target
-        run: cd mnist-wasm-inference && cargo build --release --target wasm32-wasip1
+      - name: Build mnist-inference with wasm32-wasi target
+        run: cd mnist-inference && cargo build --release --target wasm32-wasip1
 
-      - name: Build iris-wasm-inference with wasm32-wasi target
-        run: cd iris-wasm-inference && cargo build --release --target wasm32-wasip1
+      - name: Build iris-inference with wasm32-wasi target
+        run: cd iris-inference && cargo build --release --target wasm32-wasip1
+
+      - name: Build winequality-inference with wasm32-wasi target
+        run: cd winequality-inference && cargo build --release --target wasm32-wasip1

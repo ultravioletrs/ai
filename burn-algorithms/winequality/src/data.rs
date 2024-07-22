@@ -128,32 +128,27 @@ impl<B: Backend> WineQualityBatcher<B> {
     pub fn new(device: B::Device) -> Self {
         Self { device }
     }
-
-    pub fn min_max_norm<const D: usize>(&self, inp: Tensor<B, D>) -> Tensor<B, D> {
-        let min = inp.clone().min_dim(0);
-        let max = inp.clone().max_dim(0);
-        (inp.clone() - min.clone()).div(max - min)
-    }
 }
 
 impl<B: Backend> Batcher<WineQualityItem, WineQualityBatch<B>> for WineQualityBatcher<B> {
     fn batch(&self, items: Vec<WineQualityItem>) -> WineQualityBatch<B> {
         let mut inputs: Vec<Tensor<B, 2>> = Vec::new();
 
+        // The constants are the min and max values of the dataset
         for item in items.iter() {
             let input_tensor = Tensor::<B, 1>::from_floats(
                 [
-                    item.fixed_acidity as f32,
-                    item.volatile_acidity as f32,
-                    item.citric_acid as f32,
-                    item.residual_sugar as f32,
-                    item.chlorides as f32,
-                    item.free_sulfur_dioxide as f32,
-                    item.total_sulfur_dioxide as f32,
-                    item.density as f32,
-                    item.ph as f32,
-                    item.sulphates as f32,
-                    item.alcohol as f32,
+                    (item.fixed_acidity as f32 - 3.8) / (14.2 - 3.8),
+                    (item.volatile_acidity as f32 - 0.08) / (1.1 - 0.08),
+                    (item.citric_acid as f32 - 0.0) / (1.66 - 0.0),
+                    (item.residual_sugar as f32 - 0.6) / (65.8 - 0.6),
+                    (item.chlorides as f32 - 0.009) / (0.346 - 0.009),
+                    (item.free_sulfur_dioxide as f32 - 2.0) / (289.0 - 2.0),
+                    (item.total_sulfur_dioxide as f32 - 9.0) / (440.0 - 9.0),
+                    (item.density as f32 - 0.98711) / (1.03898 - 0.98711),
+                    (item.ph as f32 - 2.72) / (3.82 - 2.72),
+                    (item.sulphates as f32 - 0.22) / (1.08 - 0.22),
+                    (item.alcohol as f32 - 8.0) / (14.2 - 8.0),
                 ],
                 &self.device,
             );
@@ -162,15 +157,18 @@ impl<B: Backend> Batcher<WineQualityItem, WineQualityBatch<B>> for WineQualityBa
         }
 
         let inputs = Tensor::cat(inputs, 0);
-        let inputs = self.min_max_norm(inputs);
 
         let targets = items
             .iter()
-            .map(|item| Tensor::<B, 1>::from_floats([item.quality as f32], &self.device))
+            .map(|item| {
+                Tensor::<B, 1>::from_floats(
+                    [(item.quality as f32 - 3.0) / (9.0 - 3.0)],
+                    &self.device,
+                )
+            })
             .collect();
 
         let targets = Tensor::cat(targets, 0);
-        let targets = self.min_max_norm(targets);
 
         WineQualityBatch { inputs, targets }
     }

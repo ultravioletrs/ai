@@ -1,12 +1,16 @@
 [package]
-name = "mnist-wasm-inference"
+name = "addition-inference"
 version.workspace = true
 edition.workspace = true
 readme.workspace = true
 license.workspace = true
 description.workspace = true
 
+[features]
+input = []
+
 [dependencies]
 burn = { version = "0.13.2", default-features = false, features = ["ndarray"] }
 futures = "0.3.30"
+serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.120"

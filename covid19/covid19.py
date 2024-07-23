@@ -3,9 +3,7 @@ import shutil
 import random
 import torch
 import torchvision
-import numpy as np
 from PIL import Image
-import argparse
 import zipfile
 import socket
 import sys
@@ -104,14 +102,16 @@ def train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, ep
     torch.save(resnet18.state_dict(), model_file_name)
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('data_dirs', nargs='+', help='Directories containing hospital data or zip files')
-    parser.add_argument('--model', default='model.pth', help='Filename to save the trained model')
-    parser.add_argument('--socket', default='', help='Socket file to use for communication')
-    args = parser.parse_args()
+    model_file_name = ""
+    socket_path = ""
 
-    model_file_name = args.model
-    socket_path = args.socket
+    if os.path.exists(sys.argv[1]):
+        model_file_name = sys.argv[1]
+        socket_path = ''
+    else:
+        model_file_name = ''
+        socket_path = sys.argv[1]
+
     class_names = ['Normal', 'Viral Pneumonia', 'COVID']
 
     # Combine datasets from multiple hospitals
@@ -132,7 +132,7 @@ def main():
         os.mkdir(hospital_path, mode=0o777)
     
     hospitals = []
-    for data_dir in args.data_dirs:
+    for data_dir in sys.argv[2:]:
         if zipfile.is_zipfile(data_dir):
             with zipfile.ZipFile(data_dir, 'r') as zip_ref:
                 zip_ref.extractall(hospital_path)
@@ -170,7 +170,7 @@ def main():
 
     train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, epochs=1)
     
-    if socket_path is not None and socket_path != '':
+    if socket_path != '':
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             client.connect(socket_path)

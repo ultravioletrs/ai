@@ -41,6 +41,12 @@ Do do the training, execute:
 python covid19.py data/h1 data/h2 data/h3 --model model.pth
 ```
 
+To run the model on cocos, we would need to send the results to a unix socket. This can be done by running:
+
+```bash
+python covid19.py data/h1 data/h2 data/h3 --socket /tmp/covid19.sock
+```
+
 ## Test Model
 
 Inference can be done using `predict.py`:

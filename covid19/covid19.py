@@ -107,9 +107,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('data_dirs', nargs='+', help='Directories containing hospital data or zip files')
     parser.add_argument('--model', default='model.pth', help='Filename to save the trained model')
+    parser.add_argument('--socket', default='', help='Socket file to use for communication')
     args = parser.parse_args()
 
     model_file_name = args.model
+    socket_path = args.socket
     class_names = ['Normal', 'Viral Pneumonia', 'COVID']
 
     # Combine datasets from multiple hospitals
@@ -167,6 +169,16 @@ def main():
     print('Number of test batches:', len(dl_test))
 
     train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, epochs=1)
+    
+    if socket_path is not None and socket_path != '':
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            client.connect(socket_path)
+            with open(model_file_name, 'rb') as f:
+                data = f.read()
+                client.sendall(data)        
+        finally:
+            client.close()
 
 if __name__ == '__main__':
     ssl._create_default_https_context = ssl._create_unverified_context

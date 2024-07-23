@@ -41,10 +41,20 @@ def main():
     parser = argparse.ArgumentParser(description='Load model and make a prediction.')
     parser.add_argument('--model', type=str, required=True,
                         help='path to the model file')
+    parser.add_argument('--binary', type=str, required=False,
+                        help='path to the binary file from cocos')
     parser.add_argument('--image', type=str, required=True,
                         help='path to the image for prediction')
     
     args = parser.parse_args()
+    if args.binary is not None and args.binary != '':
+        with open(args.binary, 'rb') as f:
+            data = f.read()
+        
+        args.model = "/tmp/model.pth"
+        with open(args.model, 'wb') as f:
+            f.write(data)
+
     model_path = args.model
     image_path = args.image
 

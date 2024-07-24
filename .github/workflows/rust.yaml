@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "burn-algorithms/**"
+      - ".github/**"
   pull_request:
     branches:
       - main
+    paths:
+      - "burn-algorithms/**"
+      - ".github/**"
 
 env:
   CARGO_TERM_COLOR: always

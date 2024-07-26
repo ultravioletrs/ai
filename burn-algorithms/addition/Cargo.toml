@@ -11,7 +11,7 @@ publish = false
 ndarray = ["burn/ndarray"]
 wgpu = ["burn/wgpu"]
 cocos = []
-input = []
+read = []
 
 [dependencies]
 burn = { version = "0.13.2", features = ["ndarray", "wgpu"] }

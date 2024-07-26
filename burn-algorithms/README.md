@@ -4,6 +4,10 @@ The need to run machine learning algorithms either training or making inference 
 
 Burn Algorithms is a collection machine learning algorithms that is written in Rust using [burn](https://burn.dev/). Burn is a deep learning Framework for Rust that is designed to be extremely flexible, compute efficient and highly portable. Burn strives to be as fast as possible on as many hardwares as possible, with robust implementations. With Burn, you can run your machine learning models on the CPU, GPU, WebAssembly, and other hardwares.
 
+These examples are used to be provide starting point on using [cocos](https://github.com/ultravioletrs/cocos) system to run machine learning algorithms. [Cocos AI](https://docs.cocos.ultraviolet.rs/) is an open-source system designed for running confidential workloads. It features a Confidential VM (CVM) manager, an in-enclave Agent, and a Command Line Interface (CLI) for secure communication with the enclave.
+
+Currently cocos supports running algorithms as binary targets in the enclave and also wasm modules. With rust we are able to build the same algorithms as binary targets and wasm modules by changing the target we are building for.
+
 ## Examples
 
 The following examples are available:
@@ -31,19 +35,7 @@ cargo run --release --bin addition --features wgpu
 The output should be something like:
 
 ```bash
-    Finished `release` profile [optimized] target(s) in 0.16s
-    Running `target/release/addition`
-
-Tensor {
-  data:
-[[5.141593, 4.0],
- [5.0, 8.141593]],
-  shape:  [2, 2],
-  device:  BestAvailable,
-  backend:  "fusion<jit<wgpu>>",
-  kind:  "Float",
-  dtype:  "f32",
-}
+[5.141593, 4.0, 5.0, 8.141593]
 ```
 
 You can also run the example using the `ndarray` feature:
@@ -55,19 +47,30 @@ cargo run --release --bin addition --features ndarray
 The output should be something like:
 
 ```bash
-    Finished `release` profile [optimized] target(s) in 0.16s
-    Running `target/release/addition`
-Tensor {
-  data:
-[[5.141593, 4.0],
- [5.0, 8.141593]],
-  shape:  [2, 2],
-  device:  Cpu,
-  backend:  "ndarray",
-  kind:  "Float",
-  dtype:  "f32",
-}
+[5.141593, 4.0, 5.0, 8.141593]
 ```
+
+To run the example on cocos, you can use the following command:
+
+[![asciicast](https://asciinema.org/a/uDe6qh0rhNe3gwXyLlp8Nz6kl.svg)](https://asciinema.org/a/uDe6qh0rhNe3gwXyLlp8Nz6kl)
+
+```bash
+cargo build --release --bin addition --features cocos
+```
+
+This will generate a binary target that can be run on cocos.
+
+To read results from cocos, you can use the following command:
+
+```bash
+cargo build --release --bin addition --features read
+```
+
+```bash
+./target/release/addition result.bin
+```
+
+A detailed explanation of how to run the example on cocos can be found in the [COCOS.md](./COCOS.md) file.
 
 ### Iris dataset
 

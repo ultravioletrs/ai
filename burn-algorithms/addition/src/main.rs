@@ -1,6 +1,3 @@
-#[cfg(any(feature = "ndarray", feature = "cocos"))]
-use std::{io::Write, os::unix::net::UnixStream};
-
 use burn::{
     prelude::*,
     tensor::{backend::Backend, Tensor},
@@ -21,34 +18,18 @@ pub fn addition<B: Backend>(
 }
 
 #[cfg(any(feature = "ndarray", feature = "cocos"))]
-pub fn send_data_via_socket(result: Data<f32, 2>) -> Result<(), String> {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2 {
-        return Err("Provide unix socket path".to_string());
-    }
-
-    let mut stream = match UnixStream::connect(&args[1]) {
-        Ok(stream) => stream,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let data = result.to_string();
-    match stream.write_all(data.as_bytes()) {
-        Ok(_) => (),
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(())
-}
-
-#[cfg(any(feature = "ndarray", feature = "cocos"))]
 pub fn run() {
     let a = [[2., 3.], [4., 5.]];
     let b = [[std::f32::consts::PI, 1.], [1., std::f32::consts::PI]];
     match addition::<burn::backend::NdArray>(a, b) {
         Ok(result) => {
             if cfg!(feature = "cocos") {
-                match send_data_via_socket(result) {
+                let args: Vec<String> = std::env::args().collect();
+                if args.len() < 2 {
+                    eprintln!("Usage: addition <unix-socket-path>");
+                    std::process::exit(1);
+                }
+                match lib::send_data_via_socket(result.to_string(), args[1].to_string()) {
                     Ok(_) => (),
                     Err(e) => {
                         eprintln!("{}", e);

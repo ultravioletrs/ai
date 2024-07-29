@@ -12,6 +12,7 @@ members = [
     "iris-inference",
     "agnews",
     "imdb",
+    "lib",
 ]
 resolver = "2"
 

@@ -1,0 +1,10 @@
+[package]
+name = "lib"
+version.workspace = true
+edition.workspace = true
+readme.workspace = true
+license.workspace = true
+description.workspace = true
+publish = false
+
+[dependencies]

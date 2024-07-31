@@ -28,5 +28,15 @@ fn main() {
     let a = [[2., 3.], [4., 5.]];
     let b = [[std::f32::consts::PI, 1.], [1., std::f32::consts::PI]];
     let result = executor::block_on(addition::<burn::backend::NdArray>(a, b));
-    println!("{:?}", result);
+    if cfg!(feature = "cocos") {
+        match lib::save_results_to_file(result.to_string(), "results/results.txt".to_string()) {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("{}", e);
+                std::process::exit(1);
+            }
+        }
+    } else {
+        println!("{:}", result);
+    }
 }

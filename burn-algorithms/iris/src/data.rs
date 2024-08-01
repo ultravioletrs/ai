@@ -56,16 +56,16 @@ impl Dataset<IrisItem> for IrisDataset {
 }
 
 impl IrisDataset {
-    pub fn train() -> Self {
-        Self::new("train")
+    pub fn train(csv_file_path: &str) -> Self {
+        Self::new("train", csv_file_path)
     }
 
-    pub fn test() -> Self {
-        Self::new("test")
+    pub fn test(csv_file_path: &str) -> Self {
+        Self::new("test", csv_file_path)
     }
 
-    pub fn new(split: &str) -> Self {
-        let path = IrisDataset::read();
+    pub fn new(split: &str, csv_file_path: &str) -> Self {
+        let path = IrisDataset::read(csv_file_path);
 
         let mut rdr = csv::ReaderBuilder::new();
         let rdr = rdr.delimiter(b',');
@@ -89,11 +89,9 @@ impl IrisDataset {
         }
     }
 
-    fn read() -> PathBuf {
-        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
-        let iris_dir = example_dir.join("data/");
-
-        let csv_file = iris_dir.join("Iris.csv");
+    fn read(data_path: &str) -> PathBuf {
+        let csv_file = Path::new(data_path).to_path_buf();
+        
         if !csv_file.exists() {
             panic!("Download the Iris dataset from https://www.kaggle.com/datasets/saurabh00007/iriscsv and place it in the data directory");
         }

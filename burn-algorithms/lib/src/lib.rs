@@ -1,3 +1,5 @@
+use burn::train::renderer::{MetricState, MetricsRenderer, TrainingProgress};
+
 #[cfg(not(target_family = "wasm"))]
 use std::os::unix::net::UnixStream;
 use std::{error::Error, io::Write};
@@ -41,6 +43,24 @@ pub fn save_results_to_file(result: String, path: String) -> Result<(), Box<dyn 
     };
 
     Ok(())
+}
+
+pub struct EmptyMetricsRenderer;
+
+impl EmptyMetricsRenderer {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl MetricsRenderer for EmptyMetricsRenderer {
+    fn update_train(&mut self, _state: MetricState) {}
+
+    fn update_valid(&mut self, _state: MetricState) {}
+
+    fn render_train(&mut self, _item: TrainingProgress) {}
+
+    fn render_valid(&mut self, _item: TrainingProgress) {}
 }
 
 #[cfg(test)]

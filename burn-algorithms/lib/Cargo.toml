@@ -8,3 +8,4 @@ description.workspace = true
 publish = false
 
 [dependencies]
+burn = { version = "0.13.2", default-features = false }

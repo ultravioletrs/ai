@@ -8,6 +8,7 @@ use burn::{
     },
     prelude::*,
 };
+use dircpy::copy_dir;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -67,17 +68,15 @@ impl Dataset<WineQualityItem> for WineQualityDataset {
 }
 
 impl WineQualityDataset {
-    pub fn train() -> Self {
-        Self::new("train")
+    pub fn train(path: &PathBuf) -> Self {
+        Self::new("train", path)
     }
 
-    pub fn test() -> Self {
-        Self::new("test")
+    pub fn test(path: &PathBuf) -> Self {
+        Self::new("test", path)
     }
 
-    pub fn new(split: &str) -> Self {
-        let path = WineQualityDataset::read();
-
+    pub fn new(split: &str, path: &PathBuf) -> Self {
         let mut rdr = csv::ReaderBuilder::new();
         let rdr = rdr.delimiter(b';');
 
@@ -100,15 +99,30 @@ impl WineQualityDataset {
         }
     }
 
-    fn read() -> PathBuf {
-        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
-        let wine_dir = example_dir.join("data/");
+    pub fn read() -> PathBuf {
+        let csv_file = if cfg!(feature = "cocos") {
+            let wine_dir = Path::new("datasets");
+            let files = std::fs::read_dir(wine_dir).unwrap();
+            let zipped_file_without_ext = files
+                .map(|f| f.unwrap().path())
+                .next()
+                .expect("No file found in the directory");
+            let zipped_file = zipped_file_without_ext.with_extension("zip");
+            std::fs::copy(zipped_file_without_ext.as_path(), &zipped_file).unwrap();
+            std::fs::remove_file(zipped_file_without_ext.as_path()).unwrap();
+            simple_zip::zip::Decompress::local_buffer(&zipped_file);
+            let src = wine_dir.parent().unwrap().join("data");
+            copy_dir(src, wine_dir).unwrap();
+            wine_dir.join("winequality-white.csv")
+        } else {
+            let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+            let wine_dir = example_dir.join("data/");
 
-        let csv_file = wine_dir.join("winequality-white.csv");
+            wine_dir.join("winequality-white.csv")
+        };
         if !csv_file.exists() {
             panic!("Download the Wine Quality dataset from https://archive.ics.uci.edu/dataset/186/wine+quality and place it in the data directory");
         }
-
         csv_file
     }
 }

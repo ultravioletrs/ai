@@ -307,6 +307,13 @@ Extract the dataset
 tar -xvzf agnews/data/ag_news_csv.tgz -C agnews/data
 ```
 
+Add header to the csv files // label,title,description
+
+```bash
+sed -i '1s/^/label,title,description\n/' agnews/data/train.csv
+sed -i '1s/^/label,title,description\n/' agnews/data/test.csv
+```
+
 Then, run the following command to train the model on wgpu or ndrray.
 
 ```bash

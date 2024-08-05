@@ -75,17 +75,31 @@ pub fn train<B: AutodiffBackend, D: ClassificationDataset + 'static>(
         .with_model_size(config.transformer.d_model)
         .init();
 
-    let learner = LearnerBuilder::new(artifact_dir)
-        .metric_train_numeric(AccuracyMetric::new())
-        .metric_valid_numeric(AccuracyMetric::new())
-        .metric_train_numeric(LossMetric::new())
-        .metric_valid_numeric(LossMetric::new())
-        .metric_train_numeric(LearningRateMetric::new())
-        .with_file_checkpointer(CompactRecorder::new())
-        .devices(vec![device.clone()])
-        .num_epochs(config.num_epochs)
-        .summary()
-        .build(model, optim, lr_scheduler);
+    let learner = if cfg!(feature = "cocos") {
+        LearnerBuilder::new(artifact_dir)
+            .metric_train_numeric(AccuracyMetric::new())
+            .metric_valid_numeric(AccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new())
+            .metric_train_numeric(LearningRateMetric::new())
+            .with_file_checkpointer(CompactRecorder::new())
+            .devices(vec![device.clone()])
+            .num_epochs(config.num_epochs)
+            .renderer(lib::EmptyMetricsRenderer)
+            .build(model, optim, lr_scheduler)
+    } else {
+        LearnerBuilder::new(artifact_dir)
+            .metric_train_numeric(AccuracyMetric::new())
+            .metric_valid_numeric(AccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new())
+            .metric_train_numeric(LearningRateMetric::new())
+            .with_file_checkpointer(CompactRecorder::new())
+            .devices(vec![device.clone()])
+            .num_epochs(config.num_epochs)
+            .summary()
+            .build(model, optim, lr_scheduler)
+    };
 
     let model_trained = learner.fit(dataloader_train, dataloader_test);
 

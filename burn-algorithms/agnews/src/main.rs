@@ -6,6 +6,13 @@ use burn::{
 
 use agnews::{data::AgNewsDataset, training::TrainingConfig};
 
+#[cfg(feature = "cocos")]
+static ARTIFACT_DIR: &str = "results";
+
+#[cfg(not(feature = "cocos"))]
+static ARTIFACT_DIR: &str = "artifacts/agnews/";
+
+
 pub fn launch<B: AutodiffBackend>(devices: B::Device) {
     let config = TrainingConfig::new(
         TransformerEncoderConfig::new(256, 1024, 8, 4)
@@ -14,16 +21,18 @@ pub fn launch<B: AutodiffBackend>(devices: B::Device) {
         AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5))),
     );
 
+    let data_path = AgNewsDataset::data_path();
+
     agnews::training::train::<B, AgNewsDataset>(
         devices,
-        AgNewsDataset::train(),
-        AgNewsDataset::test(),
+        AgNewsDataset::train(&data_path),
+        AgNewsDataset::test(&data_path),
         config,
-        "imdb/artifacts/",
+        ARTIFACT_DIR,
     );
 }
 
-#[cfg(feature = "ndarray")]
+#[cfg(not(feature = "wgpu"))]
 mod ndarray {
     use burn::backend::{
         ndarray::{NdArray, NdArrayDevice},
@@ -53,7 +62,7 @@ mod wgpu {
 }
 
 fn main() {
-    #[cfg(feature = "ndarray")]
+    #[cfg(not(feature = "wgpu"))]
     ndarray::run();
     #[cfg(feature = "wgpu")]
     wgpu::run();

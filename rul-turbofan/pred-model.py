@@ -7,18 +7,21 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, Dataset
 import os
-import zipfile
+
+# Set directories
+datasets_dir = 'datasets'  # Relative path to the datasets directory
+results_dir = 'results'  # Relative path to the results directory
 
 # Load datasets
-test_df = pd.read_csv('test_FD003.txt', sep=r'\s+', header=None)
-rul_df = pd.read_csv('RUL_FD003.txt', sep=r'\s+', header=None)
+test_df = pd.read_csv(os.path.join(datasets_dir, 'test_FD003.txt'), sep=r'\s+', header=None)
+rul_df = pd.read_csv(os.path.join(datasets_dir, 'RUL_FD003.txt'), sep=r'\s+', header=None)
 
-column_names = ['id', 'cycle'] + ['setting1', 'setting2', 'setting3'] + ['s' + str(i) for i in range(1, 22)] # column names include 's1' to 's21', covering 21 columns in total.
+column_names = ['id', 'cycle'] + ['setting1', 'setting2', 'setting3'] + ['s' + str(i) for i in range(1, 22)]
 test_df.columns = column_names
 rul_df.columns = ['RUL']
 
 # Load scaler
-scaler = joblib.load('scaler.pkl')
+scaler = joblib.load(os.path.join(datasets_dir, 'scaler.pkl'))
 cols_normalize = test_df.columns.difference(['id', 'cycle'])
 
 # Normalize test data
@@ -87,7 +90,6 @@ class LSTMModel(nn.Module):
         
         return out
 
-
 # Set device based on availability of CUDA (GPU)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -104,7 +106,7 @@ sequence_length = 50  # Length of the input sequences fed into the LSTM
 model = LSTMModel(input_dim, hidden_dim, num_layers, output_dim)
 
 # Load the trained model's state dictionary from a saved file
-model.load_state_dict(torch.load('model.pth', map_location=device))
+model.load_state_dict(torch.load(os.path.join(datasets_dir, 'model.pth'), map_location=device, weights_only=True))
 
 # Move the model to the appropriate device (GPU or CPU)
 model = model.to(device)
@@ -143,14 +145,15 @@ def visualize_and_save(df, save_path):
     plt.savefig(save_path)
     plt.close()
 
-output_file = 'result-plot.png'
+# Create results directory if it does not exist
+os.makedirs(results_dir, exist_ok=True)
+
+# Save the result plot
+output_file = os.path.join(results_dir, 'result-plot.png')
 visualize_and_save(result_df, output_file)
 
-# Define the name for the zip file
-zip_filename = 'predictions.zip'
+# Save the result DataFrame as a CSV file
+result_csv = os.path.join(results_dir, 'prediction_results.csv')
+result_df.to_csv(result_csv, index=False)
 
-# Zip the file
-with zipfile.ZipFile(zip_filename, 'w') as zipf:
-    zipf.write(output_file, os.path.basename(output_file))
-
-print(f"Plot saved as '{output_file}' and zipped successfully as '{zip_filename}'.")
+print(f"Plot saved as '{output_file}' and results saved as '{result_csv}'.")

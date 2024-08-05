@@ -102,20 +102,28 @@ impl WineQualityDataset {
     pub fn read() -> PathBuf {
         let csv_file = if cfg!(feature = "cocos") {
             let wine_dir = Path::new("datasets");
-            let files = std::fs::read_dir(wine_dir).unwrap();
+            let files = std::fs::read_dir(wine_dir).expect("Failed to read directory");
             let zipped_file_without_ext = files
-                .map(|f| f.unwrap().path())
+                .map(|f| f.expect("Failed to read file").path())
                 .next()
                 .expect("No file found in the directory");
             let zipped_file = zipped_file_without_ext.with_extension("zip");
-            std::fs::copy(zipped_file_without_ext.as_path(), &zipped_file).unwrap();
-            std::fs::remove_file(zipped_file_without_ext.as_path()).unwrap();
+            std::fs::copy(zipped_file_without_ext.as_path(), &zipped_file)
+                .expect("Failed to copy file");
+            std::fs::remove_file(zipped_file_without_ext.as_path()).expect("Failed to remove file");
             simple_zip::zip::Decompress::local_buffer(&zipped_file);
-            let src = wine_dir.parent().unwrap().join("data");
-            copy_dir(src, wine_dir).unwrap();
+            let src = wine_dir
+                .parent()
+                .expect("Failed to get parent")
+                .join("data");
+            copy_dir(src, wine_dir).expect("Failed to copy directory");
             wine_dir.join("winequality-white.csv")
         } else {
-            let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+            let example_dir = Path::new(file!())
+                .parent()
+                .expect("Failed to get parent")
+                .parent()
+                .expect("Failed to get parent");
             let wine_dir = example_dir.join("data/");
 
             wine_dir.join("winequality-white.csv")

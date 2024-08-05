@@ -48,7 +48,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
     let model = RegressionModelConfig::new(config.input_feature_len).init(&device);
     B::seed(config.seed);
 
-     let path = WineQualityDataset::read();
+    let path = WineQualityDataset::read();
     let train_dataset = WineQualityDataset::train(&path);
     let test_dataset = WineQualityDataset::test(&path);
 

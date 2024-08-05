@@ -1,5 +1,5 @@
+#[cfg(not(target_family = "wasm"))]
 use burn::train::renderer::{MetricState, MetricsRenderer, TrainingProgress};
-
 #[cfg(not(target_family = "wasm"))]
 use std::os::unix::net::UnixStream;
 use std::{error::Error, io::Write};
@@ -45,14 +45,22 @@ pub fn save_results_to_file(result: String, path: String) -> Result<(), Box<dyn 
     Ok(())
 }
 
+#[cfg(not(target_family = "wasm"))]
 pub struct EmptyMetricsRenderer;
 
+#[cfg(not(target_family = "wasm"))]
 impl EmptyMetricsRenderer {
     pub fn new() -> Self {
         Self {}
     }
 }
-
+#[cfg(not(target_family = "wasm"))]
+impl Default for EmptyMetricsRenderer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+#[cfg(not(target_family = "wasm"))]
 impl MetricsRenderer for EmptyMetricsRenderer {
     fn update_train(&mut self, _state: MetricState) {}
 

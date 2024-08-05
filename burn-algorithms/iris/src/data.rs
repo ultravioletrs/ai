@@ -92,13 +92,17 @@ impl IrisDataset {
     fn read() -> PathBuf {
         let csv_file = if cfg!(feature = "cocos") {
             let iris_dir = Path::new("datasets");
-            let files = std::fs::read_dir(iris_dir).unwrap();
+            let files = std::fs::read_dir(iris_dir).expect("Failed to read directory");
             files
-                .map(|f| f.unwrap().path())
+                .map(|f| f.expect("Failed to read file").path())
                 .next()
                 .expect("No file found in the directory")
         } else {
-            let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+            let example_dir = Path::new(file!())
+                .parent()
+                .expect("Failed to get parent")
+                .parent()
+                .expect("Failed to get parent");
             let iris_dir = example_dir.join("data/");
             iris_dir.join("Iris.csv")
         };

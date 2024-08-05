@@ -48,15 +48,15 @@ impl Dataset<ClassificationItem> for AgNewsDataset {
 }
 
 impl AgNewsDataset {
-    pub fn train(agnews_dir: &PathBuf) -> Self {
+    pub fn train(agnews_dir: &Path) -> Self {
         Self::new(agnews_dir, "train.csv")
     }
 
-    pub fn test(agnews_dir: &PathBuf) -> Self {
+    pub fn test(agnews_dir: &Path) -> Self {
         Self::new(agnews_dir, "test.csv")
     }
 
-    pub fn new(agnews_dir: &PathBuf, split: &str) -> Self {
+    pub fn new(agnews_dir: &Path, split: &str) -> Self {
         let dataset = Self::read(agnews_dir, split);
         Self { dataset }
     }
@@ -64,18 +64,20 @@ impl AgNewsDataset {
     pub fn data_path() -> PathBuf {
         let data_dir = if cfg!(feature = "cocos") {
             let datasets_dir = Path::new("datasets");
-            let files = std::fs::read_dir(datasets_dir).unwrap();
+            let files = std::fs::read_dir(datasets_dir).expect("Failed to read directory");
             let tarball_without_ext = files
-                .map(|f| f.unwrap().path())
+                .map(|f| f.expect("Failed to read file").path())
                 .next()
                 .expect("No file found in the directory");
             let tarball = tarball_without_ext.with_extension("tgz");
-            std::fs::copy(tarball_without_ext.as_path(), &tarball).unwrap();
-            std::fs::remove_file(tarball_without_ext.as_path()).unwrap();
-            let tarball_file = File::open(&tarball).unwrap();
+            std::fs::copy(tarball_without_ext.as_path(), &tarball).expect("Failed to copy file");
+            std::fs::remove_file(tarball_without_ext.as_path()).expect("Failed to remove file");
+            let tarball_file = File::open(&tarball).expect("Failed to open file");
             let tar = GzDecoder::new(tarball_file);
             let mut archive = Archive::new(tar);
-            archive.unpack(datasets_dir).unwrap();
+            archive
+                .unpack(datasets_dir)
+                .expect("Failed to unpack tarball");
 
             let agnews_dir = datasets_dir.join("ag_news_csv");
 
@@ -86,16 +88,20 @@ impl AgNewsDataset {
 
             agnews_dir
         } else {
-            let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
+            let example_dir = Path::new(file!())
+                .parent()
+                .expect("Failed to get parent")
+                .parent()
+                .expect("Failed to get parent");
             example_dir.join("data/ag_news_csv/")
         };
 
         data_dir
     }
 
-    fn read(agnews_dir: &PathBuf, file_name: &str) -> InMemDataset<AgNewsItem> {
+    fn read(agnews_dir: &Path, file_name: &str) -> InMemDataset<AgNewsItem> {
         let csv_file = agnews_dir.join(file_name);
-        
+
         if !csv_file.exists() {
             panic!("Download the AG News dataset from https://s3.amazonaws.com/fast-ai-nlp/ag_news_csv.tgz and place it in the data directory");
         }

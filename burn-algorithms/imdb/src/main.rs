@@ -12,7 +12,6 @@ static ARTIFACT_DIR: &str = "results";
 #[cfg(not(feature = "cocos"))]
 static ARTIFACT_DIR: &str = "artifacts/imdb/";
 
-
 pub fn launch<B: AutodiffBackend>(devices: B::Device) {
     let config = ExperimentConfig::new(
         TransformerEncoderConfig::new(256, 1024, 8, 4)

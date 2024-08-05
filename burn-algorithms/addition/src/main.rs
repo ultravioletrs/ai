@@ -24,7 +24,10 @@ pub fn run() {
     match addition::<burn::backend::NdArray>(a, b) {
         Ok(result) => {
             if cfg!(feature = "cocos") {
-                match lib::save_results_to_file(result.to_string(), "results/results.txt".to_string()) {
+                match lib::save_results_to_file(
+                    result.to_string(),
+                    "results/results.txt".to_string(),
+                ) {
                     Ok(_) => (),
                     Err(e) => {
                         eprintln!("{}", e);

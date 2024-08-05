@@ -1,4 +1,8 @@
-use crate::{data::ClassificationBatcher, dataset::{data_path, CIFAR10Loader}, model::Cnn};
+use crate::{
+    data::ClassificationBatcher,
+    dataset::{data_path, CIFAR10Loader},
+    model::Cnn,
+};
 use burn::{
     data::{dataloader::DataLoaderBuilder, dataset::vision::ImageFolderDataset},
     optim::SgdConfig,

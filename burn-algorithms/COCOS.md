@@ -60,7 +60,7 @@ make cli
 Start computation server(this happens in the cocos directory).
 
 ```bash
-go run ./test/computations/main.go <algo_file> public.pem false <datafiles>
+go run ./test/computations/main.go <path_to_algorithm_file> public.pem false <path_to_data_files...>
 ```
 
 For the addition example we can build the addition algorithm(this happens in the burn-algorithms directory).
@@ -86,10 +86,20 @@ cd cmd/manager
 ```
 
 ```bash
-sudo MANAGER_QEMU_SMP_MAXCPUS=4 MANAGER_GRPC_URL=localhost:7001 MANAGER_LOG_LEVEL=debug MANAGER_QEMU_USE_SUDO=false  MANAGER_QEMU_ENABLE_SEV=false MANAGER_QEMU_SEV_CBITPOS=51 MANAGER_QEMU_ENABLE_SEV_SNP=false MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/ OVMF_CODE.fd MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd go run main.go
+sudo \
+MANAGER_QEMU_SMP_MAXCPUS=4 \
+MANAGER_GRPC_URL=localhost:7001 \
+MANAGER_LOG_LEVEL=debug \
+MANAGER_QEMU_USE_SUDO=false  \
+MANAGER_QEMU_ENABLE_SEV=false \
+MANAGER_QEMU_SEV_CBITPOS=51 \
+MANAGER_QEMU_ENABLE_SEV_SNP=false \
+MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
+MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd \
+go run main.go
 ```
 
-The will start on a specific port called `agent_port`, which will be in the manager logs.
+This will start on a specific port called `agent_port`, which will be in the manager logs.
 
 For example,
 

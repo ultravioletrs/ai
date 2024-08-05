@@ -6,6 +6,13 @@ use burn::{
 
 use imdb::{data::IMDBDataset, training::ExperimentConfig};
 
+#[cfg(feature = "cocos")]
+static ARTIFACT_DIR: &str = "results";
+
+#[cfg(not(feature = "cocos"))]
+static ARTIFACT_DIR: &str = "artifacts/imdb/";
+
+
 pub fn launch<B: AutodiffBackend>(devices: B::Device) {
     let config = ExperimentConfig::new(
         TransformerEncoderConfig::new(256, 1024, 8, 4)
@@ -19,11 +26,11 @@ pub fn launch<B: AutodiffBackend>(devices: B::Device) {
         IMDBDataset::train(),
         IMDBDataset::test(),
         config,
-        "imdb/artifacts/",
+        ARTIFACT_DIR,
     );
 }
 
-#[cfg(feature = "ndarray")]
+#[cfg(not(feature = "wgpu"))]
 mod ndarray {
     use burn::backend::{
         ndarray::{NdArray, NdArrayDevice},
@@ -53,7 +60,7 @@ mod wgpu {
 }
 
 fn main() {
-    #[cfg(feature = "ndarray")]
+    #[cfg(not(feature = "wgpu"))]
     ndarray::run();
     #[cfg(feature = "wgpu")]
     wgpu::run();

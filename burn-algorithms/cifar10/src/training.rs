@@ -1,6 +1,4 @@
-use std::time::Instant;
-
-use crate::{data::ClassificationBatcher, dataset::CIFAR10Loader, model::Cnn};
+use crate::{data::ClassificationBatcher, dataset::{data_path, CIFAR10Loader}, model::Cnn};
 use burn::{
     data::{dataloader::DataLoaderBuilder, dataset::vision::ImageFolderDataset},
     optim::SgdConfig,
@@ -17,7 +15,12 @@ use burn::{
 };
 
 const NUM_CLASSES: u8 = 10;
-const ARTIFACT_DIR: &str = "cifar10/artifacts/";
+
+#[cfg(feature = "cocos")]
+static ARTIFACT_DIR: &str = "results";
+
+#[cfg(not(feature = "cocos"))]
+static ARTIFACT_DIR: &str = "artifacts/cifar10/";
 
 #[derive(Config)]
 pub struct TrainingConfig {
@@ -54,44 +57,66 @@ pub fn train<B: AutodiffBackend>(config: TrainingConfig, device: B::Device) {
     let batcher_train = ClassificationBatcher::<B>::new(device.clone());
     let batcher_valid = ClassificationBatcher::<B::InnerBackend>::new(device.clone());
 
+    let data_path = data_path();
     let dataloader_train = DataLoaderBuilder::new(batcher_train)
         .batch_size(config.batch_size)
         .shuffle(config.seed)
         .num_workers(config.num_workers)
-        .build(ImageFolderDataset::cifar10_train());
+        .build(ImageFolderDataset::cifar10_train(&data_path));
 
     let dataloader_test = DataLoaderBuilder::new(batcher_valid)
         .batch_size(config.batch_size)
         .num_workers(config.num_workers)
-        .build(ImageFolderDataset::cifar10_test());
+        .build(ImageFolderDataset::cifar10_test(&data_path));
 
-    let learner = LearnerBuilder::new(ARTIFACT_DIR)
-        .metric_train_numeric(AccuracyMetric::new())
-        .metric_valid_numeric(AccuracyMetric::new())
-        .metric_train_numeric(LossMetric::new())
-        .metric_valid_numeric(LossMetric::new())
-        .with_file_checkpointer(CompactRecorder::new())
-        .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
-            Aggregate::Mean,
-            Direction::Lowest,
-            Split::Valid,
-            StoppingCondition::NoImprovementSince {
-                n_epochs: config.stop_after_n_epochs,
-            },
-        ))
-        .devices(vec![device.clone()])
-        .num_epochs(config.num_epochs)
-        .summary()
-        .build(
-            Cnn::new(NUM_CLASSES.into(), &device),
-            config.optimizer.init(),
-            config.learning_rate,
-        );
-
-    let now = Instant::now();
+    let learner = if cfg!(feature = "cocos") {
+        LearnerBuilder::new(ARTIFACT_DIR)
+            .metric_train_numeric(AccuracyMetric::new())
+            .metric_valid_numeric(AccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new())
+            .with_file_checkpointer(CompactRecorder::new())
+            .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+                Aggregate::Mean,
+                Direction::Lowest,
+                Split::Valid,
+                StoppingCondition::NoImprovementSince {
+                    n_epochs: config.stop_after_n_epochs,
+                },
+            ))
+            .devices(vec![device.clone()])
+            .num_epochs(config.num_epochs)
+            .renderer(lib::EmptyMetricsRenderer)
+            .build(
+                Cnn::new(NUM_CLASSES.into(), &device),
+                config.optimizer.init(),
+                config.learning_rate,
+            )
+    } else {
+        LearnerBuilder::new(ARTIFACT_DIR)
+            .metric_train_numeric(AccuracyMetric::new())
+            .metric_valid_numeric(AccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new())
+            .with_file_checkpointer(CompactRecorder::new())
+            .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+                Aggregate::Mean,
+                Direction::Lowest,
+                Split::Valid,
+                StoppingCondition::NoImprovementSince {
+                    n_epochs: config.stop_after_n_epochs,
+                },
+            ))
+            .devices(vec![device.clone()])
+            .num_epochs(config.num_epochs)
+            .summary()
+            .build(
+                Cnn::new(NUM_CLASSES.into(), &device),
+                config.optimizer.init(),
+                config.learning_rate,
+            )
+    };
     let model_trained = learner.fit(dataloader_train, dataloader_test);
-    let elapsed = now.elapsed().as_secs();
-    println!("Training completed in {}m{}s", (elapsed / 60), elapsed % 60);
 
     model_trained
         .save_file(format!("{ARTIFACT_DIR}/model"), &CompactRecorder::new())

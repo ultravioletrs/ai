@@ -6,9 +6,9 @@ mod ndarray {
     };
     use iris::training;
 
-    pub fn run(csv_file_path: &str) {
+    pub fn run() {
         let device = NdArrayDevice::Cpu;
-        training::run::<Autodiff<NdArray>>(device, csv_file_path);
+        training::run::<Autodiff<NdArray>>(device);
     }
 }
 
@@ -20,20 +20,15 @@ mod wgpu {
     };
     use iris::training;
 
-    pub fn run(csv_file_path: &str) {
+    pub fn run() {
         let device = WgpuDevice::default();
-        training::run::<Autodiff<Wgpu>>(device, csv_file_path);
+        training::run::<Autodiff<Wgpu>>(device);
     }
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2 {
-        eprintln!("Usage: iris <csv-file-path>");
-        std::process::exit(1);
-    }
     #[cfg(not(feature = "wgpu"))]
-    ndarray::run(&args[1]);
+    ndarray::run();
     #[cfg(feature = "wgpu")]
-    wgpu::run(&args[1]);
+    wgpu::run();
 }

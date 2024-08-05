@@ -41,15 +41,15 @@ pub struct ExpConfig {
     pub learning_rate: f64,
 }
 
-pub fn run<B: AutodiffBackend>(device: B::Device, csv_file_path: &str) {
+pub fn run<B: AutodiffBackend>(device: B::Device) {
     let optimizer = AdamConfig::new().with_weight_decay(Some(WeightDecayConfig::new(5e-5)));
     let config = ExpConfig::new(optimizer);
     let model =
         ClassificationModelConfig::new(config.input_feature_len, config.hidden_size).init(&device);
     B::seed(config.seed);
 
-    let train_dataset = IrisDataset::train(csv_file_path);
-    let test_dataset = IrisDataset::test(csv_file_path);
+    let train_dataset = IrisDataset::train();
+    let test_dataset = IrisDataset::test();
 
     #[cfg(not(feature = "cocos"))]
     {

@@ -88,10 +88,23 @@ impl IMDBDataset {
     }
 
     fn read() -> PathBuf {
-        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
-        let wine_dir = example_dir.join("data/");
+        let csv_file = if cfg!(feature = "cocos") {
+            let imdb_dir = Path::new("datasets");
+            let files = std::fs::read_dir(imdb_dir).expect("Failed to read directory");
+            files
+                .map(|f| f.expect("Failed to read file").path())
+                .next()
+                .expect("No file found in the directory")
+        } else {
+            let example_dir = Path::new(file!())
+                .parent()
+                .expect("Failed to get parent")
+                .parent()
+                .expect("Failed to get parent");
+            let imdb_dir = example_dir.join("data/");
+            imdb_dir.join("IMDB Dataset.csv")
+        };
 
-        let csv_file = wine_dir.join("IMDB Dataset.csv");
         if !csv_file.exists() {
             panic!("Download the IMDB review dataset from https://huggingface.co/datasets/scikit-learn/imdb and place it in the data directory");
         }

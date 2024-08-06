@@ -1,0 +1,11 @@
+[package]
+name = "lib"
+version.workspace = true
+edition.workspace = true
+readme.workspace = true
+license.workspace = true
+description.workspace = true
+publish = false
+
+[dependencies]
+burn = { version = "0.13.2", default-features = false }

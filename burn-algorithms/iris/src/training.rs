@@ -15,6 +15,10 @@ use burn::{
     },
 };
 
+#[cfg(feature = "cocos")]
+static ARTIFACT_DIR: &str = "results";
+
+#[cfg(not(feature = "cocos"))]
 static ARTIFACT_DIR: &str = "artifacts/iris/";
 
 #[derive(Config)]
@@ -47,8 +51,11 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
     let train_dataset = IrisDataset::train();
     let test_dataset = IrisDataset::test();
 
-    println!("Train Dataset Size: {}", train_dataset.len());
-    println!("Test Dataset Size: {}", test_dataset.len());
+    #[cfg(not(feature = "cocos"))]
+    {
+        println!("Train Dataset Size: {}", train_dataset.len());
+        println!("Test Dataset Size: {}", test_dataset.len());
+    }
 
     let batcher_train = IrisBatcher::<B>::new(device.clone());
 
@@ -66,24 +73,45 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
         .num_workers(config.num_workers)
         .build(test_dataset);
 
-    let learner = LearnerBuilder::new(ARTIFACT_DIR)
-        .metric_train_numeric(AccuracyMetric::new())
-        .metric_valid_numeric(AccuracyMetric::new())
-        .metric_train_numeric(LossMetric::new())
-        .metric_valid_numeric(LossMetric::new())
-        .with_file_checkpointer(CompactRecorder::new())
-        .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
-            Aggregate::Mean,
-            Direction::Lowest,
-            Split::Valid,
-            StoppingCondition::NoImprovementSince {
-                n_epochs: config.stop_after_n_epochs,
-            },
-        ))
-        .devices(vec![device.clone()])
-        .num_epochs(config.num_epochs)
-        .summary()
-        .build(model, config.optimizer.init(), config.learning_rate);
+    let learner = if cfg!(feature = "cocos") {
+        LearnerBuilder::new(ARTIFACT_DIR)
+            .metric_train_numeric(AccuracyMetric::new())
+            .metric_valid_numeric(AccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new())
+            .with_file_checkpointer(CompactRecorder::new())
+            .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+                Aggregate::Mean,
+                Direction::Lowest,
+                Split::Valid,
+                StoppingCondition::NoImprovementSince {
+                    n_epochs: config.stop_after_n_epochs,
+                },
+            ))
+            .devices(vec![device.clone()])
+            .num_epochs(config.num_epochs)
+            .renderer(lib::EmptyMetricsRenderer)
+            .build(model, config.optimizer.init(), config.learning_rate)
+    } else {
+        LearnerBuilder::new(ARTIFACT_DIR)
+            .metric_train_numeric(AccuracyMetric::new())
+            .metric_valid_numeric(AccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new())
+            .with_file_checkpointer(CompactRecorder::new())
+            .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+                Aggregate::Mean,
+                Direction::Lowest,
+                Split::Valid,
+                StoppingCondition::NoImprovementSince {
+                    n_epochs: config.stop_after_n_epochs,
+                },
+            ))
+            .devices(vec![device.clone()])
+            .num_epochs(config.num_epochs)
+            .summary()
+            .build(model, config.optimizer.init(), config.learning_rate)
+    };
 
     let model_trained = learner.fit(dataloader_train, dataloader_test);
 

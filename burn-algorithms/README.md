@@ -4,6 +4,10 @@ The need to run machine learning algorithms either training or making inference 
 
 Burn Algorithms is a collection machine learning algorithms that is written in Rust using [burn](https://burn.dev/). Burn is a deep learning Framework for Rust that is designed to be extremely flexible, compute efficient and highly portable. Burn strives to be as fast as possible on as many hardwares as possible, with robust implementations. With Burn, you can run your machine learning models on the CPU, GPU, WebAssembly, and other hardwares.
 
+These examples are used to be provide starting point on using [cocos](https://github.com/ultravioletrs/cocos) system to run machine learning algorithms. [Cocos AI](https://docs.cocos.ultraviolet.rs/) is an open-source system designed for running confidential workloads. It features a Confidential VM (CVM) manager, an in-enclave Agent, and a Command Line Interface (CLI) for secure communication with the enclave.
+
+Currently cocos supports running algorithms as binary targets in the enclave and also wasm modules. With rust we are able to build the same algorithms as binary targets and wasm modules by changing the target we are building for.
+
 ## Examples
 
 The following examples are available:
@@ -31,19 +35,7 @@ cargo run --release --bin addition --features wgpu
 The output should be something like:
 
 ```bash
-    Finished `release` profile [optimized] target(s) in 0.16s
-    Running `target/release/addition`
-
-Tensor {
-  data:
-[[5.141593, 4.0],
- [5.0, 8.141593]],
-  shape:  [2, 2],
-  device:  BestAvailable,
-  backend:  "fusion<jit<wgpu>>",
-  kind:  "Float",
-  dtype:  "f32",
-}
+[5.141593, 4.0, 5.0, 8.141593]
 ```
 
 You can also run the example using the `ndarray` feature:
@@ -55,18 +47,25 @@ cargo run --release --bin addition --features ndarray
 The output should be something like:
 
 ```bash
-    Finished `release` profile [optimized] target(s) in 0.16s
-    Running `target/release/addition`
-Tensor {
-  data:
-[[5.141593, 4.0],
- [5.0, 8.141593]],
-  shape:  [2, 2],
-  device:  Cpu,
-  backend:  "ndarray",
-  kind:  "Float",
-  dtype:  "f32",
-}
+[5.141593, 4.0, 5.0, 8.141593]
+```
+
+A detailed explanation of how to run the example on cocos can be found in the [COCOS.md](./COCOS.md) file.
+
+```bash
+cargo build --release --bin addition --features cocos
+```
+
+This will generate a binary target that can be run on cocos.
+
+To read results from cocos, you can use the following command:
+
+```bash
+cargo build --release --bin addition --features read
+```
+
+```bash
+./target/release/addition result.txt
 ```
 
 ### Iris dataset
@@ -82,21 +81,19 @@ cargo run --release --bin iris --features wgpu
 The output should be something like:
 
 ```bash
-  Finished `release` profile [optimized] target(s) in 0.19s
-  Running `target/release/iris`
 Train Dataset Size: 120
 Test Dataset Size: 30
 ======================== Learner Summary ========================
 Model: ClassificationModel[num_params=9091]
-Total Epochs: 100
+Total Epochs: 81
 
 
 | Split | Metric   | Min.     | Epoch    | Max.     | Epoch    |
 |-------|----------|----------|----------|----------|----------|
-| Train | Accuracy | 35.833   | 1        | 98.333   | 100      |
-| Train | Loss     | 0.053    | 99       | 1.141    | 1        |
-| Valid | Accuracy | 56.667   | 2        | 100.000  | 92       |
-| Valid | Loss     | 0.031    | 92       | 0.950    | 1        |
+| Train | Accuracy | 35.833   | 1        | 99.167   | 61       |
+| Train | Loss     | 0.055    | 76       | 1.141    | 1        |
+| Valid | Accuracy | 56.667   | 2        | 100.000  | 79       |
+| Valid | Loss     | 0.028    | 76       | 0.950    | 1        |
 ```
 
 or
@@ -108,21 +105,19 @@ cargo run --release --bin iris --features ndarray
 The output should be something like:
 
 ```bash
-  Finished `release` profile [optimized] target(s) in 0.19s
-  Running `target/release/iris`
 Train Dataset Size: 120
 Test Dataset Size: 30
 ======================== Learner Summary ========================
 Model: ClassificationModel[num_params=9091]
-Total Epochs: 100
+Total Epochs: 81
 
 
 | Split | Metric   | Min.     | Epoch    | Max.     | Epoch    |
 |-------|----------|----------|----------|----------|----------|
-| Train | Accuracy | 47.500   | 1        | 99.167   | 23       |
-| Train | Loss     | 0.053    | 99       | 1.041    | 1        |
-| Valid | Accuracy | 66.667   | 1        | 100.000  | 92       |
-| Valid | Loss     | 0.031    | 92       | 0.837    | 1        |
+| Train | Accuracy | 47.500   | 1        | 99.167   | 61       |
+| Train | Loss     | 0.055    | 76       | 1.041    | 1        |
+| Valid | Accuracy | 66.667   | 1        | 100.000  | 79       |
+| Valid | Loss     | 0.028    | 76       | 0.837    | 1        |
 ```
 
 ### Wine Quality dataset
@@ -150,19 +145,17 @@ cargo run --release --bin winequality --features wgpu
 The output should be something like:
 
 ```bash
-  Finished `release` profile [optimized] target(s) in 0.16s
-  Running `target/release/winequality`
 Train Dataset Size: 3918
 Test Dataset Size: 980
 ======================== Learner Summary ========================
 Model: RegressionModel[num_params=12]
-Total Epochs: 100
+Total Epochs: 25
 
 
 | Split | Metric | Min.     | Epoch    | Max.     | Epoch    |
 |-------|--------|----------|----------|----------|----------|
-| Train | Loss   | 0.028    | 100      | 0.120    | 1        |
-| Valid | Loss   | 0.042    | 100      | 0.078    | 1        |
+| Train | Loss   | 0.026    | 19       | NaN      | 25       |
+| Valid | Loss   | 0.025    | 20       | NaN      | 25       |
 ```
 
 or
@@ -174,24 +167,27 @@ cargo run --release --bin winequality --features ndarray
 The output should be something like:
 
 ```bash
-  Finished `release` profile [optimized] target(s) in 0.16s
-  Running `target/release/winequality`
 Train Dataset Size: 3918
 Test Dataset Size: 980
 ======================== Learner Summary ========================
 Model: RegressionModel[num_params=12]
-Total Epochs: 100
+Total Epochs: 25
 
 
 | Split | Metric | Min.     | Epoch    | Max.     | Epoch    |
 |-------|--------|----------|----------|----------|----------|
-| Train | Loss   | 0.028    | 100      | 0.171    | 1        |
-| Valid | Loss   | 0.042    | 100      | 0.110    | 1        |
+| Train | Loss   | 0.027    | 23       | 0.148    | 1        |
+| Valid | Loss   | 0.026    | 25       | 0.090    | 1        |
 ```
 
 ### MNIST dataset
 
 First, download the dataset from <https://www.kaggle.com/datasets/playlist/mnistzip/data?select=mnist_png> and extract it in the `data` folder inside the `mnist` folder.
+
+```bash
+mkdir -p mnist/data/
+unzip mnistzip.zip -d mnist/data/
+```
 
 The folder structure would be something like:
 
@@ -233,7 +229,17 @@ cargo run --release --bin mnist --features wgpu
 The output should be something like:
 
 ```bash
+======================== Learner Summary ========================
+Model: Model[num_params=376952]
+Total Epochs: 10
 
+
+| Split | Metric   | Min.     | Epoch    | Max.     | Epoch    |
+|-------|----------|----------|----------|----------|----------|
+| Train | Accuracy | 93.537   | 1        | 99.612   | 10       |
+| Train | Loss     | 0.014    | 10       | 0.250    | 1        |
+| Valid | Accuracy | 97.770   | 1        | 98.960   | 9        |
+| Valid | Loss     | 0.031    | 9        | 0.079    | 1        |
 ```
 
 or
@@ -245,7 +251,17 @@ cargo run --release --bin mnist --features ndarray
 The output should be something like:
 
 ```bash
+======================== Learner Summary ========================
+Model: Model[num_params=376952]
+Total Epochs: 2
 
+
+| Split | Metric   | Min.     | Epoch    | Max.     | Epoch    |
+|-------|----------|----------|----------|----------|----------|
+| Train | Accuracy | 93.425   | 1        | 97.884   | 2        |
+| Train | Loss     | 0.075    | 2        | 0.249    | 1        |
+| Valid | Accuracy | 97.680   | 1        | 97.680   | 1        |
+| Valid | Loss     | 0.080    | 1        | 0.080    | 1        |
 ```
 
 ### Cifar-10 dataset
@@ -273,7 +289,17 @@ cargo run --release --bin cifar10 --features wgpu
 The output should be something like:
 
 ```bash
+======================== Learner Summary ========================
+Model: Cnn[num_params=550570]
+Total Epochs: 4
 
+
+| Split | Metric   | Min.     | Epoch    | Max.     | Epoch    |
+|-------|----------|----------|----------|----------|----------|
+| Train | Loss     | 1.284    | 4        | 2.207    | 1        |
+| Train | Accuracy | 15.322   | 1        | 52.665   | 4        |
+| Valid | Loss     | 1.273    | 3        | 1.946    | 1        |
+| Valid | Accuracy | 27.460   | 1        | 52.600   | 3        |
 ```
 
 or
@@ -302,6 +328,13 @@ Extract the dataset
 
 ```bash
 tar -xvzf agnews/data/ag_news_csv.tgz -C agnews/data
+```
+
+Add header to the csv files // label,title,description
+
+```bash
+sed -i '1s/^/label,title,description\n/' agnews/data/ag_news_csv/train.csv
+sed -i '1s/^/label,title,description\n/' agnews/data/ag_news_csv/test.csv
 ```
 
 Then, run the following command to train the model on wgpu or ndrray.

@@ -8,6 +8,7 @@ publish = false
 [features]
 ndarray = ["burn/ndarray"]
 wgpu = ["burn/wgpu"]
+cocos = []
 
 [dependencies]
 burn = { version = "0.13.2", features = [
@@ -20,3 +21,4 @@ csv = "1.3.0"
 derive-new = "0.6.0"
 serde = { version = "1.0.203", features = ["derive", "std"] }
 tokenizers = { version = "0.19.1", features = ["http", "onig"] }
+lib = { path = "../lib" }

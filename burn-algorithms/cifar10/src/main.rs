@@ -1,4 +1,4 @@
-#[cfg(feature = "ndarray")]
+#[cfg(not(feature = "wgpu"))]
 mod ndarray {
     use burn::{
         backend::{
@@ -45,7 +45,7 @@ mod wgpu {
 }
 
 fn main() {
-    #[cfg(feature = "ndarray")]
+    #[cfg(not(feature = "wgpu"))]
     ndarray::run();
     #[cfg(feature = "wgpu")]
     wgpu::run();

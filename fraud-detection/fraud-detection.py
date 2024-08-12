@@ -86,14 +86,10 @@ def main():
     parser.add_argument('data_paths', nargs='+', help='Paths to fraud detection datasets')
     parser.add_argument('--model', default='fraud_model.ubj', help='Filename to save the trained model')
     args = parser.parse_args()
-    results_dir = 'results'
-
-    # Ensure the results directory exists
-    os.makedirs(results_dir, exist_ok=True)
 
     # Load datasets
-    train_df = args.data_paths[1]
-    model_f = os.path.join(results_dir, args.model)
+    train_df = os.path.join("", args.data_paths[1])
+    model_f = os.path.join("", args.model)
 
     train_and_evaluate_model(train_df, model_f)
 

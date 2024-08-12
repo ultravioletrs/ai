@@ -1,4 +1,5 @@
-use std::path::Path;
+use std::fs::File;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use burn::data::dataset::InMemDataset;
@@ -8,7 +9,9 @@ use burn::{
     tensor::{backend::Backend, Tensor},
 };
 use derive_new::new;
+use flate2::read::GzDecoder;
 use nn::attention::generate_padding_mask;
+use tar::Archive;
 
 #[derive(new, Clone, Debug)]
 pub struct ClassificationItem {
@@ -45,24 +48,59 @@ impl Dataset<ClassificationItem> for AgNewsDataset {
 }
 
 impl AgNewsDataset {
-    pub fn train() -> Self {
-        Self::new("train.csv")
+    pub fn train(agnews_dir: &Path) -> Self {
+        Self::new(agnews_dir, "train.csv")
     }
 
-    pub fn test() -> Self {
-        Self::new("test.csv")
+    pub fn test(agnews_dir: &Path) -> Self {
+        Self::new(agnews_dir, "test.csv")
     }
 
-    pub fn new(split: &str) -> Self {
-        let dataset = Self::read(split);
+    pub fn new(agnews_dir: &Path, split: &str) -> Self {
+        let dataset = Self::read(agnews_dir, split);
         Self { dataset }
     }
 
-    fn read(file_name: &str) -> InMemDataset<AgNewsItem> {
-        let example_dir = Path::new(file!()).parent().unwrap().parent().unwrap();
-        let iris_dir = example_dir.join("data/ag_news_csv/");
+    pub fn data_path() -> PathBuf {
+        let data_dir = if cfg!(feature = "cocos") {
+            let datasets_dir = Path::new("datasets");
+            let files = std::fs::read_dir(datasets_dir).expect("Failed to read directory");
+            let tarball_without_ext = files
+                .map(|f| f.expect("Failed to read file").path())
+                .next()
+                .expect("No file found in the directory");
+            let tarball = tarball_without_ext.with_extension("tgz");
+            std::fs::copy(tarball_without_ext.as_path(), &tarball).expect("Failed to copy file");
+            std::fs::remove_file(tarball_without_ext.as_path()).expect("Failed to remove file");
+            let tarball_file = File::open(&tarball).expect("Failed to open file");
+            let tar = GzDecoder::new(tarball_file);
+            let mut archive = Archive::new(tar);
+            archive
+                .unpack(datasets_dir)
+                .expect("Failed to unpack tarball");
 
-        let csv_file = iris_dir.join(file_name);
+            let agnews_dir = datasets_dir.join("ag_news_csv");
+
+            let labels_file = agnews_dir.join("classes.txt");
+            if !labels_file.exists() {
+                panic!("Download the CIFAR-10 dataset from https://s3.amazonaws.com/fast-ai-sample/cifar10.tgz and place it in the data directory");
+            }
+
+            agnews_dir
+        } else {
+            let example_dir = Path::new(file!())
+                .parent()
+                .expect("Failed to get parent")
+                .parent()
+                .expect("Failed to get parent");
+            example_dir.join("data/ag_news_csv/")
+        };
+
+        data_dir
+    }
+
+    fn read(agnews_dir: &Path, file_name: &str) -> InMemDataset<AgNewsItem> {
+        let csv_file = agnews_dir.join(file_name);
 
         if !csv_file.exists() {
             panic!("Download the AG News dataset from https://s3.amazonaws.com/fast-ai-nlp/ag_news_csv.tgz and place it in the data directory");

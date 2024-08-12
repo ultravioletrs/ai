@@ -73,12 +73,10 @@ def train_and_evaluate_model(train_df, model_f):
     test_f1_xgb = f1_score(y_test, test_predictions_xgb)
 
     print(f'\nXGBoost Evaluation Metrics on Validation Set:')
-    print(
-        f'Accuracy: {val_accuracy_xgb:.4f}, Precision: {val_precision_xgb:.4f}, Recall: {val_recall_xgb:.4f}, F1-score: {val_f1_xgb:.4f}')
+    print(f'Accuracy: {val_accuracy_xgb:.4f}, Precision: {val_precision_xgb:.4f}, Recall: {val_recall_xgb:.4f}, F1-score: {val_f1_xgb:.4f}')
 
     print(f'\nXGBoost Evaluation Metrics on Test Set:')
-    print(
-        f'Accuracy: {test_accuracy_xgb:.4f}, Precision: {test_precision_xgb:.4f}, Recall: {test_recall_xgb:.4f}, F1-score: {test_f1_xgb:.4f}')
+    print(f'Accuracy: {test_accuracy_xgb:.4f}, Precision: {test_precision_xgb:.4f}, Recall: {test_recall_xgb:.4f}, F1-score: {test_f1_xgb:.4f}')
 
 
 def main():

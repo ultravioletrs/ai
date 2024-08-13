@@ -14,7 +14,8 @@ The dataset includes the following features:
 - `Amount`: Transaction amount.
 - `Class`: Label indicating whether the transaction is fraudulent (1) or not (0).
 
-You can download the dataset `creditcard.csv` from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud).
+You can download the dataset `creditcard.csv` from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud/download?datasetVersionNumber=3).
+Create a new directory `datasets`, and add the downloaded `creditcard.csv` to the directory.
 
 ### Train Model
 
@@ -24,7 +25,7 @@ python fraud-detection.py
 ``` 
 Script will produce model `fraud_model.ubj`
 ### Test Model
-Inference can be done using `prediction.py`
+Inference can be done using `prediction.py`. Make sure to add the `fraud_model.ubj` file to the datasets directory as well.
 
 ```bash
 python prediction.py
@@ -32,10 +33,3 @@ python prediction.py
 Results will be `.png` images that represents confusion matrix and AUPRC
 ![](images/AUPRC.png)
 ![](images/C-matrix.png)
-
-
-
-
-
-
-

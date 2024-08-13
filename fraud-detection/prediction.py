@@ -100,7 +100,6 @@ def main():
 
     # Ensure the results directory exists
     os.makedirs(results_dir, exist_ok=True)
-    os.makedirs(datasets_dir, exist_ok=True)
 
     # Load datasets
     train_df = os.path.join(datasets_dir, "creditcard.csv")

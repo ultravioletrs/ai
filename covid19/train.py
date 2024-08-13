@@ -1,14 +1,15 @@
 import os
-import shutil
 import random
+import shutil
+import zipfile
+
 import torch
 import torchvision
 from PIL import Image
-import zipfile
-import socket
-import sys
-import ssl
 
+RESULTS_DIR = "results"
+DATASETS_DIR = "datasets"
+MODEL_FILE_NAME = os.path.join(RESULTS_DIR, "model.pth")
 
 def prepare_test_set(root_dir, class_names):
     test_dir = os.path.join(root_dir, "test")
@@ -65,7 +66,7 @@ class ChestXRayDataset(torch.utils.data.Dataset):
 
 
 def train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, epochs=1):
-    resnet18 = torchvision.models.resnet18(pretrained=True)
+    resnet18 = torchvision.models.resnet18(weights='DEFAULT')
     resnet18.fc = torch.nn.Linear(in_features=512, out_features=len(class_names))
     loss_fn = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(resnet18.parameters(), lr=3e-5)
@@ -95,7 +96,7 @@ def train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, ep
                     val_loss += loss.item()
                     _, preds = torch.max(outputs, 1)
                     accuracy += sum((preds == labels).numpy())
-                val_loss /= val_step + 1
+                    val_loss /= val_step + 1
                 accuracy = accuracy / len(dl_test.dataset)
                 print(f"Validation Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")
                 # show_preds()
@@ -104,32 +105,33 @@ def train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, ep
                     print("Performance condition satisfied, stopping..")
                     torch.save(resnet18.state_dict(), model_file_name)
                     return
-        train_loss /= train_step + 1
+            train_loss /= train_step + 1
         print(f"Training Loss: {train_loss:.4f}")
     print("Training complete..")
     torch.save(resnet18.state_dict(), model_file_name)
 
 
 def main():
-    model_file_name = "model.pth"
-    socket_path = ""
-    hospitals_zip = []
-
-    if len(sys.argv) != 5 and len(sys.argv) != 6:
-        print(
-            "Usage: python covid19.py /path/to/socket /path/to/hospital1 /path/to/hospital2 /path/to/hospital3"
-        )
-        print(
-            "Usage: python covid19.py --model /path/to/model.pth /path/to/hospital1 /path/to/hospital2 /path/to/hospital3"
-        )
+    if not os.path.isdir(DATASETS_DIR):
+        print(f"Dataset directory {DATASETS_DIR} not found")
         return
 
-    if sys.argv[1] == "--model":
-        model_file_name = sys.argv[2]
-        hospitals_zip = sys.argv[3:]
-    else:
-        socket_path = sys.argv[1]
-        hospitals_zip = sys.argv[2:]
+    hospitals_zip = []
+    for hospital in os.listdir(DATASETS_DIR):
+        hospital_path = os.path.join(DATASETS_DIR, hospital)
+        if os.path.isdir(hospital_path):
+            hospitals_zip.append(hospital_path)
+        else:
+            if not hospital_path.endswith(".zip"):
+                print(f"Skipping {hospital_path}")
+                continue
+            with zipfile.ZipFile(hospital_path, "r") as zip_ref:
+                zip_ref.extractall(DATASETS_DIR)
+            hospitals_zip.append(hospital_path.replace(".zip", ""))
+
+    if not hospitals_zip:
+        print("No datasets found")
+        return
 
     class_names = ["Normal", "Viral Pneumonia", "COVID"]
 
@@ -153,20 +155,9 @@ def main():
         ]
     )
 
-    hospital_path = "/tmp/work"
-    if not os.path.isdir(hospital_path):
-        os.mkdir(hospital_path, mode=0o777)
-
-    for hospital in hospitals_zip:
-        with zipfile.ZipFile(hospital, "r") as zip_ref:
-            zip_ref.extractall(hospital_path)
-
-    hospitals = []
-    for hospital in os.listdir(hospital_path):
-        hospitals.append(os.path.join(hospital_path, hospital))
 
     train_dirs = {class_name: [] for class_name in class_names}
-    for hospital in hospitals:
+    for hospital in hospitals_zip:
         for class_name in class_names:
             train_dirs[class_name].append(os.path.join(hospital, class_name))
 
@@ -179,7 +170,7 @@ def main():
 
     # Prepare test dataset
     test_dirs = {class_name: [] for class_name in class_names}
-    for hospital in hospitals:
+    for hospital in hospitals_zip:
         test_dir = prepare_test_set(hospital, class_names)
         for class_name in class_names:
             test_dirs[class_name].append(os.path.join(test_dir, class_name))
@@ -198,19 +189,12 @@ def main():
     print("Number of training batches:", len(dl_train))
     print("Number of test batches:", len(dl_test))
 
-    train_and_evaluate_model(dl_train, dl_test, class_names, model_file_name, epochs=1)
+    try:
+        os.makedirs(RESULTS_DIR)
+    except FileExistsError:
+        pass
 
-    if socket_path != "":
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            client.connect(socket_path)
-            with open(model_file_name, "rb") as f:
-                data = f.read()
-                client.sendall(data)
-        finally:
-            client.close()
-
+    train_and_evaluate_model(dl_train, dl_test, class_names, MODEL_FILE_NAME, epochs=1)
 
 if __name__ == "__main__":
-    ssl._create_default_https_context = ssl._create_unverified_context
     main()

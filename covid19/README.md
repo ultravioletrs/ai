@@ -20,45 +20,38 @@ pip3 install torch~=2.3.1 torchvision~=0.18.1 --index-url https://download.pytor
 
 ## Install
 
-- Fetch the data from Kaggle - [COVID-19 Radiography Database](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) dataset
-- You will get `archive.zip` in the folder
+Fetch the data from Kaggle - [COVID-19 Radiography Database](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) dataset
+
+```bash
+kaggle datasets download -d tawsifurrahman/covid19-radiography-database
+```
+
+To run the above command you would need [kaggle cli](https://github.com/Kaggle/kaggle-api) installed and API credentials setup. This can be done by following [this documentation](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#kaggle-api).
+
+You will get `covid19-radiography-database.zip` in the folder
 
 Run:
 
 ```bash
-python tools/prepare_datasets.py archive.zip -d data
+python tools/prepare_datasets.py covid19-radiography-database.zip -d datasets
 ```
 
-This will create `data` directory with datasets divided in 3 hospitals (`h1`, `h2` and `h3`) plus additionally a `test` dataset, which will be used to test the produced model.
+This will create `datasets` directory with datasets divided in 3 hospitals (`h1`, `h2` and `h3`) plus additionally a `test` dataset, which will be used to test the produced model.
 
 ## Train Model
-
-`covid19.py` is a model that needs to be trained.
 
 To do the training, execute:
 
 ```bash
-python covid19.py --model model.pth data/h1 data/h2 data/h3
-```
-
-To run the model on cocos, we would need to send the results to a unix socket. This can be done by running:
-
-```bash
-python covid19.py /tmp/covid19.sock data/h1 data/h2 data/h3
-```
-
-The folders `data/h1`, `data/h1` or `data/h1` can be passed as zipped files (after they have been zipped) for example:
-
-```bash
-python covid19.py /tmp/covid19.sock data/h1.zip data/h2.zip data/h3.zip
+python train.py
 ```
 
 ## Test Model
 
-Inference can be done using `predict.py`:
+Inference can be done using `predict.py`. Anyfile in the `datasets/test` directory can be used for testing.
 
 ```bash
-python predict.py --model model.pth --image data/test/COVID/COVID-2.png
+python predict.py --model results/model.pth --image datasets/test/COVID/COVID-2.png
 ```
 
 ## Testing with Cocos
@@ -66,13 +59,13 @@ python predict.py --model model.pth --image data/test/COVID/COVID-2.png
 Currently, the most suitable way to test it with cocos is to use the virtual machine that has AMDSEV enabled. Login to the virtual machine and run the following commands:
 
 ```bash
-mkdir -p /tmp/covid19-test && cd /tmp/covid19-test
+mkdir -p covid19-test && cd covid19-test
 ```
 
 Clone the ai repository which has the COVID-19 model:
 
 ```bash
-git clone https://github.com/ultravioletrs/ai.git
+git clone https://github.com/rodneyosodo/uv-ai.git
 ```
 
 Clone cocos repository:

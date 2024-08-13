@@ -21,6 +21,9 @@ results/
 # Data files
 data/
 
+# Datasets
+datasets/
+
 *.zip
 
 # Byte-compiled / optimized / DLL files
@@ -65,9 +68,3 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Model
-model.pth
-
-# Data
-data/

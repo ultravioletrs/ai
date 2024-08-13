@@ -1,4 +1,3 @@
-import argparse
 import os
 
 import pandas as pd
@@ -80,11 +79,6 @@ def train_and_evaluate_model(train_df, model_f):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('data_paths', nargs='+', help='Paths to fraud detection datasets')
-    parser.add_argument('--model', default='fraud_model.ubj', help='Filename to save the trained model')
-    args = parser.parse_args()
-
     datasets_dir = 'datasets'
     results_dir = 'results'
 
@@ -93,8 +87,8 @@ def main():
     os.makedirs(datasets_dir, exist_ok=True)
 
     # Load datasets
-    train_df = os.path.join(datasets_dir, args.data_paths[1])
-    model_f = os.path.join(results_dir, args.model)
+    train_df = os.path.join(datasets_dir, "creditcard.csv")
+    model_f = os.path.join(results_dir, "fraud_model.ubj")
 
     train_and_evaluate_model(train_df, model_f)
 

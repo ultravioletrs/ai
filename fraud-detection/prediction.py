@@ -1,4 +1,3 @@
-import argparse
 import os
 
 import matplotlib.pyplot as plt
@@ -96,12 +95,6 @@ def predict(train_df, model_f, cmatrix_f, auprc_f):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('data_paths', nargs='+', help='Paths to fraud detection datasets')
-    parser.add_argument('--cmatrix', default='confusion_matrix.png', help='Filename to save C-matrix')
-    parser.add_argument('--auprc', default='aurpc.png', help='Filename to save the plotted aurpc')
-    args = parser.parse_args()
-
     datasets_dir = 'datasets'
     results_dir = 'results'
 
@@ -110,10 +103,10 @@ def main():
     os.makedirs(datasets_dir, exist_ok=True)
 
     # Load datasets
-    train_df = os.path.join(datasets_dir, args.data_paths[1])
-    model_f = os.path.join(datasets_dir, args.data_paths[2])
-    cmatrix_f = os.path.join(results_dir, args.cmatrix)
-    auprc_f = os.path.join(results_dir, args.auprc)
+    train_df = os.path.join(datasets_dir, "creditcard.csv")
+    model_f = os.path.join(datasets_dir, "fraud_model.ubj")
+    cmatrix_f = os.path.join(results_dir, "confusion_matrix.png")
+    auprc_f = os.path.join(results_dir, "aurpc.png")
 
     predict(train_df, model_f, cmatrix_f, auprc_f)
 

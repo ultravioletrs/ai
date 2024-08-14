@@ -82,11 +82,21 @@ def main():
     datasets_dir = 'datasets'
     results_dir = 'results'
 
+    if not os.path.isdir(datasets_dir):
+        print(f"Dataset directory {datasets_dir} not found")
+        return
+
     # Ensure the results directory exists
     os.makedirs(results_dir, exist_ok=True)
 
     # Load datasets
-    train_df = os.path.join(datasets_dir, "creditcard.csv")
+    creditcard_file = None
+
+    for file in os.listdir(datasets_dir):
+        if file.endswith('.csv'):
+            creditcard_file = file
+
+    train_df = os.path.join(datasets_dir, creditcard_file)
     model_f = os.path.join(results_dir, "fraud_model.ubj")
 
     train_and_evaluate_model(train_df, model_f)

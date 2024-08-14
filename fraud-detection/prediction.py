@@ -98,12 +98,27 @@ def main():
     datasets_dir = 'datasets'
     results_dir = 'results'
 
+    # Ensure the datasets directory exists
+    if not os.path.isdir(datasets_dir):
+        print(f"Dataset directory {datasets_dir} not found")
+        return
+
     # Ensure the results directory exists
     os.makedirs(results_dir, exist_ok=True)
 
     # Load datasets
-    train_df = os.path.join(datasets_dir, "creditcard.csv")
-    model_f = os.path.join(datasets_dir, "fraud_model.ubj")
+    train_df = None
+    model_f = None
+
+    for file in os.listdir(datasets_dir):
+        if file.endswith('.csv'):
+            train_df = file
+        if file.endswith('.ubj'):
+            model_f = file
+
+    # Load datasets
+    train_df = os.path.join(datasets_dir, train_df)
+    model_f = os.path.join(datasets_dir, model_f)
     cmatrix_f = os.path.join(results_dir, "confusion_matrix.png")
     auprc_f = os.path.join(results_dir, "aurpc.png")
 

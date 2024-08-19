@@ -4,7 +4,6 @@ This project aims to detect fraudulent credit card transactions using machine le
 Given the class imbalance ratio, script measuring the accuracy using the Area Under the Precision-Recall Curve (AUPRC).
 
 ## Dataset
-
 The dataset used in this project contains transactions made by European cardholders over a period of two days in September 2013. It has been modified using Principal Component Analysis (PCA) for confidentiality reasons. 
 This dataset presents transactions that occurred in two days, where we have 492 frauds out of 284,807 transactions. The dataset is highly unbalanced, the positive class (frauds) account for 0.172% of all transactions.
 The dataset includes the following features:
@@ -14,8 +13,22 @@ The dataset includes the following features:
 - `Amount`: Transaction amount.
 - `Class`: Label indicating whether the transaction is fraudulent (1) or not (0).
 
-You can download the dataset `creditcard.csv` from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud/download?datasetVersionNumber=3).
-Create a new directory `datasets`, and add the downloaded `creditcard.csv` to the directory.
+
+Fetch the data from Kaggle - [Fraud Detection Database](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) dataset
+
+```bash
+kaggle datasets download -d mlg-ulb/creditcardfraud
+```
+
+To run the above command you would need [kaggle cli](https://github.com/Kaggle/kaggle-api) installed and API credentials setup. This can be done by following [this documentation](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#kaggle-api).
+You will get `creditcardfraud.zip` in the folder
+
+Run:
+```bash
+unzip creditcardfraud.zip -d datasets/
+```
+This will extract the contents of `creditcardfraud.zip` into `datasets`  directory
+
 
 ### Train Model
 
@@ -71,7 +84,7 @@ make all
 Before running the computation server, we need to issue public and private key pairs. This can be done by running the following commands:
 
 ```bash
-./build/cocos-cli keys -k="rsa"
+./build/cocos-cli keys -k rsa
 ```
 
 Run the computation server:
@@ -105,19 +118,42 @@ After sometime you will see the computation server will output a port number. Th
 The logs will look like this:
 
 ```bash
-&{message:"\nXGBoost Evaluation Metrics on Validation Set:\nAccuracy: 0.9995, Precision: 0.7887, Recall: 0.8750, F1-score: 0.8296\n\nXGBoost Evaluation Metrics on Test Set:\nAccuracy: 0.9995, Precision: 0.8252, Recall: 0.8673, F1-score: 0.8458\n"  computation_id:"1"  level:"DEBUG"  timestamp:{seconds:1723543333  nanos:759194638}}
+{"time":"2024-08-19T10:23:50.068445068+03:00","level":"INFO","msg":"manager_test_server service gRPC server listening at :7001 without TLS"}
+{"time":"2024-08-19T10:24:17.767534539+03:00","level":"DEBUG","msg":"received who am on ip address [::1]:45608"}
 received agent event
-&{event_type:"running"  timestamp:{seconds:1723543333  nanos:984903280}  computation_id:"1"  originator:"agent"  status:"complete"}
+&{event_type:"vm-provision" timestamp:{seconds:1724052258 nanos:76069455} computation_id:"1" originator:"manager" status:"starting"}
 received agent event
-&{event_type:"resultsReady"  timestamp:{seconds:1723543333  nanos:996398342}  computation_id:"1"  originator:"agent"  status:"in-progress"}
+&{event_type:"vm-provision" timestamp:{seconds:1724052258 nanos:76390596} computation_id:"1" originator:"manager" status:"in-progress"}
 received agent log
-&{message:"Transition: resultsReady -> resultsReady\n"  computation_id:"1"  level:"DEBUG"  timestamp:{seconds:1723543333  nanos:996384676}}
+&{message:"char device redirected to /dev/pts/5 (label compat_monitor0)\n" computation_id:"1" level:"debug" timestamp:{seconds:1724052258 nanos:140448274}}
 received agent log
-&{message:"Method Result took 992ns to complete without errors"  computation_id:"1"  level:"INFO"  timestamp:{seconds:1723543549  nanos:842501995}}
+&{message:"qemu-system-x86_64: warning: host doesn't support requested feature: CPUID.80000001H:EDX.mmxext [bit 22]\nqemu-system-x86_64: warning: host doesn't support requested feature: CPUID.80000001H:EDX.fxsr-opt [bit 25]\nqemu-system-x86_64: warning: host doesn't support requested feature: CPUID.80000001H:ECX.cr8legacy [bit 4]\nqemu-system-x86_64: warning: host doesn't support requested feature: CPUID.80000001H:ECX.sse4a [bit 6]\nqemu-system-x86_64: warning: host doesn't support requested feature: CPUID.80000001H:ECX.misalignsse [bit 7]\nqemu-system-x86_64: warning: host doesn't support requested feature: CPUID.80000001H:ECX.osvw [bit 9]\n" computation_id:"1" level:"error" timestamp:{seconds:1724052258 nanos:177482826}}
+received agent log
+&{message:"\x1b[2J\x1b[01;01H" computation_id:"1" level:"debug" timestamp:{seconds:1724052258 nanos:485734327}}
 received agent event
-&{event_type:"complete"  timestamp:{seconds:1723543549  nanos:844679773}  computation_id:"1"  originator:"agent"  status:"in-progress"}
+&{event_type:"vm-provision" timestamp:{seconds:1724052271 nanos:480190393} computation_id:"1" originator:"manager" status:"complete"}
+received runRes
+&{agent_port:"6050" computation_id:"1"}
 received agent log
-&{message:"Transition: complete -> complete\n"  computation_id:"1"  level:"DEBUG"  timestamp:{seconds:1723543549  nanos:844659716}}
+&{message:"Transition: receivingManifest -> receivingManifest\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1724052271 nanos:479293635}}
+received agent event
+&{event_type:"receivingAlgorithm" timestamp:{seconds:1724052271 nanos:480207098} computation_id:"1" originator:"agent" status:"in-progress"}
+received agent log
+&{message:"agent service gRPC server listening at :7002 without TLS" computation_id:"1" level:"INFO" timestamp:{seconds:1724052271 nanos:480676615}}
+received agent event
+&{event_type:"receivingData" timestamp:{seconds:1724052647 nanos:92491532} computation_id:"1" originator:"agent" status:"in-progress"}
+received agent log
+&{message:"Transition: receivingData -> receivingData\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1724052647 nanos:92466438}}
+received agent event
+&{event_type:"running" timestamp:{seconds:1724052722 nanos:889675666} computation_id:"1" originator:"agent" status:"in-progress"}
+received agent log
+&{message:"computation run started" computation_id:"1" level:"DEBUG" timestamp:{seconds:1724052722 nanos:889653708}}
+received agent log
+&{message:"Collecting pandas~=2.2.2 (from -r /tmp/requirements.txt3799616143 (line 1))\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1724052725 nanos:908283024}}
+received agent log
+&{message:"  Downloading pandas-2.2.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (19 kB)\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1724052726 nanos:447295301}}
+received agent log
+
 ```
 
 On another terminal, upload the artifacts to the computation server:
@@ -128,7 +164,16 @@ export AGENT_GRPC_URL=localhost:<port_number>
 
 ```bash
 ./build/cocos-cli algo ../ai/fraud-detection/fraud-detection.py ./private.pem -a python -r ../ai/fraud-detection/requirements.txt
+
 ```
+
+Output:
+```
+2024/08/19 10:30:27 Uploading algorithm binary: ../../ai/fraud-detection/fraud-detection.py
+Uploading algorithm...  100% [===================================================================================>] 
+2024/08/19 10:30:47 Successfully uploaded algorithm
+```
+
 
 Upload the data to the computation server:
 
@@ -136,10 +181,22 @@ Upload the data to the computation server:
 ./build/cocos-cli data ../ai/fraud-detection/datasets/creditcard.csv ./private.pem
 ```
 
+Output:
+```
+2024/08/19 10:31:41 Uploading dataset CSV: ../../ai/fraud-detection/datasets/creditcard.csv
+Uploading data...  100% [========================================================================================>] 
+2024/08/19 10:32:02 Successfully uploaded dataset
+```
+
 When the results are ready, download the results:
 
 ```bash
 ./build/cocos-cli result ./private.pem
+```
+Output:
+```
+2024/08/19 10:55:01 Retrieving computation result file
+2024/08/19 10:55:21 Computation result retrieved and saved successfully!
 ```
 
 The above will generate a `results.zip` file. Copy this file to the ai directory:
@@ -177,20 +234,7 @@ git clone https://github.com/ultravioletrs/ai.git
 ```bash
 cd ai/fraud-detection
 ```
-
-Download the data from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud/download?datasetVersionNumber=3).
-
-You can install kaggle-cli to download the dataset:
-
-```bash
-pip install kaggle
-```
-
-Set the [kaggle API key](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and download the dataset:
-
-```bash
-unzip archive.zip -d datasets
-```
+For detailed instructions on how to fetch datasets from Kaggle, please refer to the [Datasets](#dataset)  section.
 
 In your browser launch to PRISM SaaS at https://prism.ultraviolet.rs.
 
@@ -216,7 +260,7 @@ Public/Private key pairs are needed for the users that will provide the algorith
 This can be done by running the following commands:
 
 ```bash
-./build/cocos-cli keys -k="rsa"
+./build/cocos-cli keys -k rsa
 ```
 
 You need to have done the following:
@@ -229,7 +273,7 @@ You need to have done the following:
   Make sure you have the `bzImage` and `rootfs.cpio.gz` in the `cmd/manager/img` directory.
 
   ```bash
-  sudo \                                                                                                                                      (main|…1⚑2)
+  sudo \
   MANAGER_QEMU_SMP_MAXCPUS=4 \
   MANAGER_QEMU_MEMORY_SIZE=25G \
   MANAGER_GRPC_URL=localhost:7011 \
@@ -256,7 +300,7 @@ You need to have done the following:
 - After the computation has been created, each user needs to upload their public key generated by `cocos-cli`. This key will enable the respective user to upload the datatsets and algorithms and also download the results.
 
   ```bash
-  ./build/cocos-cli keys -k="rsa"
+  ./build/cocos-cli keys -k rsa
   ```
 
 - Click run computation and wait for the vm to be provisioned.Copy the aggent port number and export `AGENT_GRPC_URL`
@@ -275,7 +319,7 @@ You need to have done the following:
   ./build/cocos-cli data ../ai/fraud-detection/creditcard.csv ./private.pem
   ```
 
-- The computation will run and you will get an event that the results are ready. You can download the results by running the following command:
+- The computation will run, and you will get an event that the results are ready. You can download the results by running the following command:
 
   ```bash
   ./build/cocos-cli results ./private.pem

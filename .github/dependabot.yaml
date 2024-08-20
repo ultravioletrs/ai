@@ -19,3 +19,13 @@ updates:
       gh-dependency:
         patterns:
           - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/fraud-detection"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+    groups:
+      pip-dependency:
+        patterns:
+          - "*"

@@ -6,12 +6,14 @@ on:
       - main
     paths:
       - "covid19/**"
+      - "fraud-detection/**"
       - ".github/**"
   pull_request:
     branches:
       - main
     paths:
       - "covid19/**"
+      - "fraud-detection/**"
       - ".github/**"
 
 jobs:
@@ -31,5 +33,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff
 
-      - name: Run Ruff
+      - name: Run Ruff on covid19
         run: ruff check --output-format=github covid19/
+
+      - name: Run Ruff on fraud-detection
+        run: ruff check --output-format=github fraud-detection/

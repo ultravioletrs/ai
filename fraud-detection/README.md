@@ -246,7 +246,7 @@ In your browser launch to PRISM SaaS at https://prism.ultraviolet.rs.
 - Unzip the folder and copy the contents to the managers `cmd/manager/` directory under `cocos` folder
 - Start the manager with the backend address.
 
-The following recording will demonstrate how to setup prism - https://jam.dev/c/8067f697-4eaa-407f-875a-17119e4f3901
+The following recordings demonstrate how to set up prism and run computation: [Part1](https://jam.dev/c/a9d0771c-eea7-4b91-8e78-b856a8fab1a6) and [Part2](https://jam.dev/c/a6e66c22-fdd9-42c0-9231-f8e3f074d28e)
 
 Build cocos artifacts:
 

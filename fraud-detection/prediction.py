@@ -43,7 +43,7 @@ def predict(train_df, model_f, cmatrix_f, auprc_f):
     test_recall = recall_score(y_test, test_predictions)
     test_f1 = f1_score(y_test, test_predictions)
 
-    print(f'\nLoaded XGBoost Model Evaluation Metrics on Test Set:')
+    print('\nLoaded XGBoost Model Evaluation Metrics on Test Set:')
     print(f'Accuracy: {test_accuracy:.4f}, Precision: {test_precision:.4f}, Recall: {test_recall:.4f}, F1-score: {test_f1:.4f}')
 
     # Confusion Matrix

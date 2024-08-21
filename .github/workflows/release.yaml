@@ -1,0 +1,84 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Populate model files
+        run: |
+          mkdir -p burn-algorithms/artifacts/iris && touch burn-algorithms/artifacts/iris/model.bin
+          mkdir -p burn-algorithms/artifacts/mnist && touch burn-algorithms/artifacts/mnist/model.bin
+          mkdir -p burn-algorithms/artifacts/winequality && touch burn-algorithms/artifacts/winequality/model.bin
+
+      - name: Add wasm32-wasi target
+        run: rustup target add wasm32-wasip1
+
+      - name: Build addition-inference with wasm32-wasi target
+        run: cd burn-algorithms/addition-inference/ && cargo build --release --target wasm32-wasip1 --features cocos
+
+      - name: Build iris-inference with wasm32-wasi target
+        run: |
+          cd burn-algorithms/iris/
+          cargo r --features cocos --bin iris-cocos
+          cp -r results/* ../artifacts/iris
+          cd ../iris-inference/
+          cargo build --release --target wasm32-wasip1
+
+      - name: Build for all features
+        run: cd burn-algorithms/ && cargo build --release --all-features
+
+      - name: Generate Changelog using git-cliff
+        uses: tj-actions/git-cliff@v1
+        with:
+          args: --verbose
+          output: "CHANGELOG.md"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          generate_release_notes: true
+          files: |
+            burn-algorithms/target/release/addition-ndarray
+            burn-algorithms/target/release/addition-wgpu
+            burn-algorithms/target/release/addition-cocos
+            burn-algorithms/target/release/addition-read
+            burn-algorithms/target/release/addition-inference
+            burn-algorithms/target/release/agnews-ndarray
+            burn-algorithms/target/release/agnews-wgpu
+            burn-algorithms/target/release/agnews-cocos
+            burn-algorithms/target/release/cifar10-ndarray
+            burn-algorithms/target/release/cifar10-wgpu
+            burn-algorithms/target/release/cifar10-cocos
+            burn-algorithms/target/release/imdb-ndarray
+            burn-algorithms/target/release/imdb-wgpu
+            burn-algorithms/target/release/imdb-cocos
+            burn-algorithms/target/release/iris-ndarray
+            burn-algorithms/target/release/iris-wgpu
+            burn-algorithms/target/release/iris-cocos
+            burn-algorithms/target/release/mnist-ndarray
+            burn-algorithms/target/release/mnist-wgpu
+            burn-algorithms/target/release/mnist-cocos
+            burn-algorithms/target/release/winequality-ndarray
+            burn-algorithms/target/release/winequality-wgpu
+            burn-algorithms/target/release/winequality-cocos
+            burn-algorithms/target/wasm32-wasip1/release/addition-inference.wasm
+            burn-algorithms/target/wasm32-wasip1/release/iris-inference.wasm

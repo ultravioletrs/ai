@@ -10,16 +10,6 @@ description.workspace = true
 cocos = []
 read = []
 
-[[bin]]
-name = "addition-inference-cocos"
-path = "src/main.rs"
-required-features = ["cocos"]
-
-[[bin]]
-name = "addition-inference-read"
-path = "src/main.rs"
-required-features = ["read"]
-
 [dependencies]
 burn = { version = "0.13.2", default-features = false, features = ["ndarray"] }
 futures = "0.3.30"

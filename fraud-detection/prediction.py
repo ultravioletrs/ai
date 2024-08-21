@@ -1,90 +1,129 @@
+import os
+
+import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+import seaborn as sns
 import xgboost as xgb
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, confusion_matrix, precision_recall_curve, auc
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-# Load dataset
-df = pd.read_csv('creditcard.csv')
 
-# Normalize 'time' and 'amount'
-scaler = StandardScaler()
-df['scaled_amount'] = scaler.fit_transform(df['Amount'].values.reshape(-1, 1))
-df['scaled_time'] = scaler.fit_transform(df['Time'].values.reshape(-1, 1))
-df.drop(['Time', 'Amount'], axis=1, inplace=True)
+def predict(train_df, model_f, cmatrix_f, auprc_f):
+    # Load dataset
+    df = pd.read_csv(train_df)
 
-# Prepare features and labels
-X = df.drop('Class', axis=1)
-y = df['Class']
+    # Normalize 'time' and 'amount'
+    scaler = StandardScaler()
+    df['scaled_amount'] = scaler.fit_transform(df['Amount'].values.reshape(-1, 1))
+    df['scaled_time'] = scaler.fit_transform(df['Time'].values.reshape(-1, 1))
+    df.drop(['Time', 'Amount'], axis=1, inplace=True)
 
-# Split data into train and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Prepare features and labels
+    X = df.drop('Class', axis=1)
+    y = df['Class']
 
-# Load the model
-loaded_bst = xgb.Booster()
-loaded_bst.load_model('fraud_model.ubj')
+    # Split data into train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Predictions using the loaded model
-dtest = xgb.DMatrix(X_test)
-test_preds = loaded_bst.predict(dtest)
+    # Load the model
+    loaded_bst = xgb.Booster()
+    loaded_bst.load_model(model_f)
 
-# Convert probabilities to binary predictions
-test_predictions = (test_preds > 0.5).astype(int)
+    # Predictions using the loaded model
+    dtest = xgb.DMatrix(X_test)
+    test_preds = loaded_bst.predict(dtest)
 
-# Evaluate the loaded model
-test_accuracy = accuracy_score(y_test, test_predictions)
-test_precision = precision_score(y_test, test_predictions)
-test_recall = recall_score(y_test, test_predictions)
-test_f1 = f1_score(y_test, test_predictions)
+    # Convert probabilities to binary predictions
+    test_predictions = (test_preds > 0.5).astype(int)
 
-print(f'\nLoaded XGBoost Model Evaluation Metrics on Test Set:')
-print(f'Accuracy: {test_accuracy:.4f}, Precision: {test_precision:.4f}, Recall: {test_recall:.4f}, F1-score: {test_f1:.4f}')
+    # Evaluate the loaded model
+    test_accuracy = accuracy_score(y_test, test_predictions)
+    test_precision = precision_score(y_test, test_predictions)
+    test_recall = recall_score(y_test, test_predictions)
+    test_f1 = f1_score(y_test, test_predictions)
 
-# Confusion Matrix
-cm = confusion_matrix(y_test, test_predictions)
+    print('\nLoaded XGBoost Model Evaluation Metrics on Test Set:')
+    print(f'Accuracy: {test_accuracy:.4f}, Precision: {test_precision:.4f}, Recall: {test_recall:.4f}, F1-score: {test_f1:.4f}')
 
-# Define labels for each quadrant
-labels = [
-    ['True Negative\n(TN)\n{}'.format(cm[0, 0]), 'False Positive\n(FP)\n{}'.format(cm[0, 1])],
-    ['False Negative\n(FN)\n{}'.format(cm[1, 0]), 'True Positive\n(TP)\n{}'.format(cm[1, 1])]
-]
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, test_predictions)
 
-# Plotting the Confusion Matrix
-plt.figure(figsize=(8, 6))
-sns.heatmap(cm, annot=labels, fmt='', cmap='Blues', cbar=False, annot_kws={"fontsize": 12})
+    # Define labels for each quadrant
+    labels = [
+        ['True Negative\n(TN)\n{}'.format(cm[0, 0]), 'False Positive\n(FP)\n{}'.format(cm[0, 1])],
+        ['False Negative\n(FN)\n{}'.format(cm[1, 0]), 'True Positive\n(TP)\n{}'.format(cm[1, 1])]
+    ]
 
-plt.ylabel('Actual')
-plt.xlabel('Predicted')
-plt.title('Confusion Matrix')
+    # Plotting the Confusion Matrix
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=labels, fmt='', cmap='Blues', cbar=False, annot_kws={"fontsize": 12})
 
-# Update tick labels
-plt.xticks([0.5, 1.5], ['Predicted Not Fraud (0)', 'Predicted Fraud (1)'])
-plt.yticks([0.5, 1.5], ['Actual Not Fraud (0)', 'Actual Fraud (1)'])
+    plt.ylabel('Actual')
+    plt.xlabel('Predicted')
+    plt.title('Confusion Matrix')
 
-plt.tight_layout()
-plt.savefig('confusion_matrix.png')  # Save the confusion matrix plot
-plt.show()
+    # Update tick labels
+    plt.xticks([0.5, 1.5], ['Predicted Not Fraud (0)', 'Predicted Fraud (1)'])
+    plt.yticks([0.5, 1.5], ['Actual Not Fraud (0)', 'Actual Fraud (1)'])
 
-# Precision-Recall Curve
-precision, recall, _ = precision_recall_curve(y_test, test_preds)
-pr_auc = auc(recall, precision)
+    plt.tight_layout()
+    plt.savefig(cmatrix_f)  # Save the confusion matrix plot
 
-plt.figure(figsize=(8, 6))
-plt.plot(recall, precision, color='blue', lw=2, label=f'PR curve (AUC = {pr_auc:.2f})')
-plt.xlabel('Recall')
-plt.ylabel('Precision')
-plt.title('Precision-Recall (PR) Curve')
-plt.legend(loc="lower left")
+    # Precision-Recall Curve
+    precision, recall, _ = precision_recall_curve(y_test, test_preds)
+    pr_auc = auc(recall, precision)
 
-# Annotations for better understanding
-plt.annotate('High Precision', xy=(0.2, 0.9), xytext=(0.3, 0.95),
-             arrowprops=dict(facecolor='blue', shrink=0.05),
-             fontsize=12, color='blue')
-plt.annotate('Precision starts to fall', xy=(0.8, 0.6), xytext=(0.6, 0.7),
-             arrowprops=dict(facecolor='red', shrink=0.05),
-             fontsize=12, color='red')
+    plt.figure(figsize=(8, 6))
+    plt.plot(recall, precision, color='blue', lw=2, label=f'PR curve (AUC = {pr_auc:.2f})')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall (PR) Curve')
+    plt.legend(loc="lower left")
 
-plt.tight_layout()
-plt.show()
+    # Annotations for better understanding
+    plt.annotate('High Precision', xy=(0.2, 0.9), xytext=(0.3, 0.95),
+                 arrowprops=dict(facecolor='blue', shrink=0.05),
+                 fontsize=12, color='blue')
+    plt.annotate('Precision starts to fall', xy=(0.8, 0.6), xytext=(0.6, 0.7),
+                 arrowprops=dict(facecolor='red', shrink=0.05),
+                 fontsize=12, color='red')
+
+    plt.tight_layout()
+    plt.savefig(auprc_f)
+    plt.close()
+
+
+def main():
+    datasets_dir = 'datasets'
+    results_dir = 'results'
+
+    # Ensure the datasets directory exists
+    if not os.path.isdir(datasets_dir):
+        print(f"Dataset directory {datasets_dir} not found")
+        return
+
+    # Ensure the results directory exists
+    os.makedirs(results_dir, exist_ok=True)
+
+    # Load datasets
+    train_df = None
+    model_f = None
+
+    for file in os.listdir(datasets_dir):
+        if file.endswith('.csv'):
+            train_df = file
+        if file.endswith('.ubj'):
+            model_f = file
+
+    # Load datasets
+    train_df = os.path.join(datasets_dir, train_df)
+    model_f = os.path.join(datasets_dir, model_f)
+    cmatrix_f = os.path.join(results_dir, "confusion_matrix.png")
+    auprc_f = os.path.join(results_dir, "aurpc.png")
+
+    predict(train_df, model_f, cmatrix_f, auprc_f)
+
+
+if __name__ == '__main__':
+    main()

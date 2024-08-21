@@ -19,3 +19,16 @@ updates:
       gh-dependency:
         patterns:
           - "*"
+
+  - package-ecosystem: "pip"
+    directories:
+      - "/covid19"
+      - "/fraud-detection"
+      - "/rul-turbofan"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+    groups:
+      pip-dependency:
+        patterns:
+          - "*"

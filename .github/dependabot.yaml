@@ -21,7 +21,10 @@ updates:
           - "*"
 
   - package-ecosystem: "pip"
-    directory: "/fraud-detection"
+    directories:
+      - "/covid19"
+      - "/fraud-detection"
+      - "/rul-turbofan"
     schedule:
       interval: "monthly"
       day: "monday"

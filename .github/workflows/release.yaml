@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -34,6 +30,7 @@ jobs:
       - name: Build addition-inference with wasm32-wasi target
         run: cd burn-algorithms/addition-inference/ && cargo build --release --target wasm32-wasip1 --features cocos
 
+      # Currently only iris-inference is built on CI since it takes a shorter time to build
       - name: Build iris-inference with wasm32-wasi target
         run: |
           cd burn-algorithms/iris/

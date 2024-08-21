@@ -18,14 +18,17 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  rust-check:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./burn-algorithms
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Populate model files
         run: |

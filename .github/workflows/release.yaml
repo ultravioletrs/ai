@@ -37,7 +37,7 @@ jobs:
           cargo r --features cocos --bin iris-cocos
           cp -r results/* ../artifacts/iris
           cd ../iris-inference/
-          cargo build --release --target wasm32-wasip1
+          cargo build --release --target wasm32-wasip1 --features cocos
 
       - name: Build for all features
         run: cd burn-algorithms/ && cargo build --release --all-features

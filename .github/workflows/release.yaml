@@ -40,7 +40,12 @@ jobs:
           cargo build --release --target wasm32-wasip1 --features cocos
 
       - name: Build for all features
-        run: cd burn-algorithms/ && cargo build --release --all-features
+        run: |
+          cd burn-algorithms/
+          cargo build --release --features read
+          cargo build --release --features ndarray
+          cargo build --release --features wgpu
+          cargo build --release --features cocos
 
       - name: Generate Changelog using git-cliff
         uses: tj-actions/git-cliff@v1

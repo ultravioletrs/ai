@@ -10,6 +10,21 @@ ndarray = ["burn/ndarray"]
 wgpu = ["burn/wgpu"]
 cocos = []
 
+[[bin]]
+name = "iris-ndarray"
+path = "src/main.rs"
+required-features = ["ndarray"]
+
+[[bin]]
+name = "iris-wgpu"
+path = "src/main.rs"
+required-features = ["wgpu"]
+
+[[bin]]
+name = "iris-cocos"
+path = "src/main.rs"
+required-features = ["cocos"]
+
 [dependencies]
 burn = { version = "0.13.2", features = [
     "dataset",

@@ -11,4 +11,4 @@ COPY ./predict.py /cocos
 RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # command to be run when the docker container is started
-CMD ["python3", "-u", "/cocos/predict.py"]
+CMD ["python", "-u", "/cocos/predict.py"]

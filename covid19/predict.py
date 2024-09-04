@@ -38,12 +38,21 @@ def predict(model, image_path, class_names):
     return predicted_class
 
 
-def show_image_with_prediction(image_path, predicted_class):
+def show_image_with_prediction(image_path, predicted_class, output_dir):
     image = Image.open(image_path)
     plt.imshow(image)
     plt.title(f"Predicted: {predicted_class}")
     plt.axis("off")
-    plt.show()
+    
+    # Ensure the results directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Create the output file path
+    output_path = os.path.join(output_dir, f"prediction_{os.path.basename(image_path)}")
+    
+    # Save the image with prediction
+    plt.savefig(output_path)
+    print(f"Image with prediction saved to {output_path}")
 
 
 def main():
@@ -86,7 +95,10 @@ def main():
     model = load_model(model_path, class_names)
     predicted_class = predict(model, image_path, class_names)
     print(f"The predicted class for the image is: {predicted_class}")
-    show_image_with_prediction(image_path, predicted_class)
+    
+    # Save the image with the prediction to the results directory
+    output_dir = "./results"
+    show_image_with_prediction(image_path, predicted_class, output_dir)
 
 
 if __name__ == "__main__":

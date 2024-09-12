@@ -189,7 +189,7 @@ impl<B: Backend> Batcher<ClassificationItem, ClassificationTrainingBatch<B>>
         for item in items {
             tokens_list.push(self.tokenizer.encode(&item.text));
             labels_list.push(Tensor::from_data(
-                Data::from([(item.label as i64).elem()]),
+                TensorData::from([(item.label as i64).elem::<B::IntElem>()]),
                 &self.device,
             ));
         }

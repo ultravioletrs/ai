@@ -49,11 +49,7 @@ pub async fn inference(wine_quality_item: WineQualityItem) -> Result<f32, String
     let input = Tensor::<NDBackend, 1>::from_floats(input, &device).unsqueeze();
     let output = model.forward(input);
 
-    #[cfg(not(target_family = "wasm"))]
     let result = output.into_scalar();
-
-    #[cfg(target_family = "wasm")]
-    let result = output.into_scalar().await;
 
     Ok(result)
 }

@@ -146,7 +146,7 @@ impl<B: Backend> Batcher<IrisItem, IrisBatch<B>> for IrisBatcher<B> {
             .iter()
             .map(|item| {
                 Tensor::<B, 1, Int>::from_data(
-                    Data::from([(class_label(&item.species) as i64).elem()]),
+                    TensorData::from([(class_label(&item.species) as i64).elem::<B::IntElem>()]),
                     &self.device,
                 )
             })

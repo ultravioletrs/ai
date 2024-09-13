@@ -36,11 +36,7 @@ pub async fn inference(iris_item: IrisItem) -> Result<&'static str, String> {
     let output = burn::tensor::activation::softmax(output, 1);
     let max_index = output.argmax(1);
 
-    #[cfg(not(target_family = "wasm"))]
     let class: i64 = max_index.into_scalar();
-
-    #[cfg(target_family = "wasm")]
-    let class: i64 = max_index.into_scalar().await;
 
     Ok(label_to_class(class))
 }

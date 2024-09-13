@@ -3,10 +3,7 @@ use burn::{
     tensor::{backend::Backend, Tensor},
 };
 
-pub fn addition<B: Backend>(
-    a: [[f32; 2]; 2],
-    b: [[f32; 2]; 2],
-) -> Result<Data<<B as Backend>::FloatElem, 2>, String> {
+pub fn addition<B: Backend>(a: [[f32; 2]; 2], b: [[f32; 2]; 2]) -> Result<TensorData, String> {
     let device = Default::default();
 
     let tensor1: Tensor<B, 2> = Tensor::from_floats(a, &device);

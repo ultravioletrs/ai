@@ -14,9 +14,5 @@ pub async fn inference(input: &[f32]) -> i64 {
     let output = burn::tensor::activation::softmax(output, 1);
     let max_index = output.argmax(1);
 
-    #[cfg(not(target_family = "wasm"))]
-    return max_index.into_scalar();
-
-    #[cfg(target_family = "wasm")]
-    return max_index.into_scalar().await;
+    max_index.into_scalar()
 }

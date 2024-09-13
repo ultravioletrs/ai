@@ -6,10 +6,7 @@ use burn::{
 };
 use futures::executor;
 
-pub async fn addition<B: Backend>(
-    a: [[f32; 2]; 2],
-    b: [[f32; 2]; 2],
-) -> Data<<B as Backend>::FloatElem, 2> {
+pub async fn addition<B: Backend>(a: [[f32; 2]; 2], b: [[f32; 2]; 2]) -> TensorData {
     let device = Default::default();
 
     let tensor1: Tensor<B, 2> = Tensor::from_floats(a, &device);
@@ -17,11 +14,7 @@ pub async fn addition<B: Backend>(
 
     let result = tensor1 + tensor2;
 
-    #[cfg(not(target_family = "wasm"))]
-    return result.into_data();
-
-    #[cfg(target_family = "wasm")]
-    return result.into_data().await;
+    result.into_data()
 }
 
 fn main() {

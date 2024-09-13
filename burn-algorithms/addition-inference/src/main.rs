@@ -14,11 +14,7 @@ pub async fn addition<B: Backend>(a: [[f32; 2]; 2], b: [[f32; 2]; 2]) -> TensorD
 
     let result = tensor1 + tensor2;
 
-    #[cfg(not(target_family = "wasm"))]
-    return result.into_data();
-
-    #[cfg(target_family = "wasm")]
-    return result.into_data().await;
+    result.into_data()
 }
 
 fn main() {

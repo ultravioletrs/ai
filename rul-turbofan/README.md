@@ -1,4 +1,4 @@
-# Remaining Useful Life (RUL) Prediction with LSTM
+111# Remaining Useful Life (RUL) Prediction with LSTM
 
 This repository contains code and resources for predicting the Remaining Useful Life (RUL) of machinery using Long Short-Term Memory (LSTM) neural networks. The dataset used for this project is provided by NASA and was downloaded from Kaggle.
 
@@ -169,6 +169,7 @@ You need to have done the following:
    ```bash
   go run ./cmd/cli/main.go checksum  ../ai/rul-turbofan/datasets/test_FD001.txt
   ```
+
    ```bash
   go run ./cmd/cli/main.go checksum  ../ai/rul-turbofan/rul-training.py
   ```
@@ -222,3 +223,4 @@ cd ../ai/rul-turbofan
 
 ```bash
 unzip results.zip -d results
+```

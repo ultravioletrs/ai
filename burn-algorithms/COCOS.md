@@ -128,30 +128,22 @@ This will start on a specific port called `agent_port`, which will be in the man
 For example,
 
 ```bash
-{"time":"2024-07-26T11:45:08.503149211+03:00","level":"INFO","msg":"manager_test_server s
-ervice gRPC server listening at :7001 without TLS"}
-{"time":"2024-07-26T11:45:14.827479501+03:00","level":"DEBUG","msg":"received who am on i
-p address [::1]:47936"}
+{"time":"2024-07-26T11:45:08.503149211+03:00","level":"INFO","msg":"manager_test_server service gRPC server listening at :7001 without TLS"}
+{"time":"2024-07-26T11:45:14.827479501+03:00","level":"DEBUG","msg":"received who am on ip address [::1]:47936"}
 received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721983514 nanos:832365721} computation_id
-:"1" originator:"manager" status:"starting"}
+&{event_type:"vm-provision" timestamp:{seconds:1721983514 nanos:832365721} computation_id:"1" originator:"manager" status:"starting"}
 received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721983514 nanos:833034946} computation_id
-:"1" originator:"manager" status:"in-progress"}
+&{event_type:"vm-provision" timestamp:{seconds:1721983514 nanos:833034946} computation_id:"1" originator:"manager" status:"in-progress"}
 received agent log
-&{message:"char device redirected to /dev/pts/15 (label compat_monitor0)\n" computation_i
-d:"1" level:"debug" timestamp:{seconds:1721983514 nanos:849595083}}
+&{message:"char device redirected to /dev/pts/15 (label compat_monitor0)\n" computation_id:"1" level:"debug" timestamp:{seconds:1721983514 nanos:849595083}}
 received agent log
-&{message:"\x1b[2J\x1b[0" computation_id:"1" level:"debug" timestamp:{seconds:1721983515
-nanos:215753406}}
+&{message:"\x1b[2J\x1b[0" computation_id:"1" level:"debug" timestamp:{seconds:1721983515 nanos:215753406}}
 received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721983527 nanos:970098872} computation_id
-:"1" originator:"manager" status:"complete"}
+&{event_type:"vm-provision" timestamp:{seconds:1721983527 nanos:970098872} computation_id:"1" originator:"manager" status:"complete"}
 received runRes
 &{agent_port:"43045" computation_id:"1"}
 received agent log
-&{message:"Transition: receivingManifest -> receivingManifest\n" computation_id:"1" level
-:"DEBUG" timestamp:{seconds:1721983527 nanos:966911139}}
+&{message:"Transition: receivingManifest -> receivingManifest\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1721983527 nanos:966911139}}
 received agent log
 ```
 

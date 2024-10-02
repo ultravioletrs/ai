@@ -59,7 +59,7 @@ pub fn run_wgpu() {
 pub fn read_binary_results() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 2 {
-        eprintln!("Usage: read-results <results-binary-file>");
+        eprintln!("Usage: read-results <results-file>");
         std::process::exit(1);
     }
     let results = std::fs::read(&args[1]).expect("Failed to read file");

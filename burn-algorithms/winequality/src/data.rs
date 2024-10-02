@@ -129,7 +129,7 @@ impl WineQualityDataset {
             wine_dir.join("winequality-white.csv")
         };
         if !csv_file.exists() {
-            panic!("Download the Wine Quality dataset from https://archive.ics.uci.edu/dataset/186/wine+quality and place it in the data directory");
+            panic!("Download the Wine Quality dataset from https://archive.ics.uci.edu/dataset/186/wine+quality and place it in the datasets directory");
         }
         csv_file
     }

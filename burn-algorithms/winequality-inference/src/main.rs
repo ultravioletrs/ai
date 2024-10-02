@@ -15,7 +15,22 @@ fn main() {
         }
     };
     match executor::block_on(inference(deserialized)) {
-        Ok(result) => println!("{}", result),
+        Ok(result) => {
+            if cfg!(feature = "cocos") {
+                match lib::save_results_to_file(
+                    result.to_string(),
+                    "results/results.txt".to_string(),
+                ) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                println!("{:}", result);
+            }
+        }
         Err(e) => eprintln!("{}", e),
     };
 }

@@ -17,6 +17,23 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let result = executor::block_on(inference(input.as_slice()));
-    println!("{}", result);
+    match executor::block_on(inference(input.as_slice())) {
+        Ok(result) => {
+            if cfg!(feature = "cocos") {
+                match lib::save_results_to_file(
+                    result.to_string(),
+                    "results/results.txt".to_string(),
+                ) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                println!("{:}", result);
+            }
+        }
+        Err(e) => eprintln!("{}", e),
+    };
 }

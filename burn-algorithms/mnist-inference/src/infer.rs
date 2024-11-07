@@ -1,10 +1,13 @@
 use crate::model::{build_and_load_model, NDBackend};
 use burn::tensor::Tensor;
 
-pub async fn inference(input: &[f32]) -> i64 {
+pub async fn inference(input: &[f32]) -> Result<i64, String> {
     let model = Some(build_and_load_model());
 
-    let model = model.as_ref().unwrap();
+    let model = match model.as_ref() {
+        Some(model) => model,
+        None => return Err("Failed to load model".to_string()),
+    };
 
     let device = Default::default();
 
@@ -14,5 +17,5 @@ pub async fn inference(input: &[f32]) -> i64 {
     let output = burn::tensor::activation::softmax(output, 1);
     let max_index = output.argmax(1);
 
-    max_index.into_scalar()
+    Ok(max_index.into_scalar())
 }

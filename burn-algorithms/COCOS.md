@@ -6,6 +6,13 @@ This folder contains some machine learning examples to help you get started with
 
 The following documentation helps you to run the examples in the enclave.
 
+## Table of Contents
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Running Examples with CVMS](#running-examples-with-cvms)
+- [WASM Module Example](#wasm-module-example)
+- [Notes](#notes)
+
 ## Prerequisites
 
 - Git
@@ -17,302 +24,253 @@ The following documentation helps you to run the examples in the enclave.
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Go](https://golang.org/doc/install)
 
-### Build qemu images
+## Setup
 
-Clone the cocos and buildroot repositories.
+### Build QEMU Images
 
-```bash
-git clone https://github.com/ultravioletrs/cocos.git
-```
+1. **Clone the repositories:**
 
-prepare cocos directory.
+   ```bash
+   git clone https://github.com/ultravioletrs/cocos.git
+   git clone https://github.com/buildroot/buildroot.git
+   ```
 
-```bash
-mkdir -p cocos/cmd/manager/img && mkdir -p cocos/cmd/manager/tmp
-```
+2. **Prepare cocos directory:**
 
-```bash
-git clone https://github.com/buildroot/buildroot.git
-```
+   ```bash
+   mkdir -p cocos/cmd/manager/img && mkdir -p cocos/cmd/manager/tmp
+   ```
 
-Change the directory to buildroot.
+3. **Build the cocos qemu image:**
 
-```bash
-cd buildroot
-```
+   ```bash
+   cd buildroot
+   make BR2_EXTERNAL=../cocos/hal/linux cocos_defconfig
+   make -j4 && cp output/images/bzImage output/images/rootfs.cpio.gz ../cocos/cmd/manager/img
+   ```
 
-Build the cocos qemu image.
+   The above commands will build the cocos qemu image and copy the kernel image and rootfs to the manager image directory.
 
-```bash
-make BR2_EXTERNAL=../cocos/hal/linux cocos_defconfig
-```
+4. **Generate key pair:**
 
-```bash
-make -j4 && cp output/images/bzImage output/images/rootfs.cpio.gz ../cocos/cmd/manager/img
-```
+   ```bash
+   cd ../cocos
+   make all
+   ./build/cocos-cli keys -k="rsa"
+   ```
 
-The above commands will build the cocos qemu image and copy the kernel image and rootfs to the manager image directory.
+### Build Example Algorithm
 
-### Get Key Pair
-
-Generates a new public/private key pair using an algorithm of the users choice(This happens in the cocos directory).
-
-If you are not in the cocos directory, change the directory to cocos.
+For the addition example, build the addition algorithm:
 
 ```bash
+cd burn-algorithms
+cargo build --release --bin addition --features cocos
+cp target/release/addition ../cocos/
 cd ../cocos
 ```
 
-```bash
-make cli
-```
+## Running Examples with CVMS
+
+The modern approach uses the CVMS (Computation Management Server) for streamlined workflow management.
+
+### Finding Your Host IP Address
+
+Find your host machine's IP address (avoid using localhost):
 
 ```bash
-./build/cocos-cli keys -k="rsa"
+ip a
 ```
 
-## Running the examples
+Look for your network interface (e.g., wlan0 for WiFi, eth0 for Ethernet) and note the inet address. For example, if you see `192.168.1.100`, use that as your `<YOUR_HOST_IP>`.
 
-Start computation server(this happens in the cocos directory).
+### Start Core Services
+
+#### Start the Computation Management Server (CVMS)
+
+From your cocos directory, start the CVMS server with the addition algorithm:
 
 ```bash
-go run ./test/computations/main.go <path_to_algorithm_file> public.pem false <path_to_data_files...>
+HOST=<YOUR_HOST_IP> go run ./test/cvms/main.go -algo-path ./addition -public-key-path public.pem -attested-tls-bool false
 ```
 
-For the addition example we can build the addition algorithm(this happens in the burn-algorithms directory).
+Expected output:
 
 ```bash
-cargo build --release --bin addition --features cocos
+{"time":"...","level":"INFO","msg":"cvms_test_server service gRPC server listening at <YOUR_HOST_IP>:7001 without TLS"}
 ```
 
-Copy the built binary from `/target/release/addition` to the directoy where you will run the computation server.
+#### Start the Manager
 
-```bash
-cp target/release/addition ../../cocos
-```
-
-For example, to run the `addition` algorithm, run the following command (this happens in the cocos directory). Since the addition algorithm does not require any dataset, the dataset path is empty.
-
-```bash
-go run ./test/computations/main.go ./addition public.pem false
-```
-
-Start the manager.
+Navigate to the cocos/cmd/manager directory and start the Manager:
 
 ```bash
 cd cmd/manager
-```
-
-The manager requires the vhost_vsock kernel module to be loaded. Load the module with the following command.
-
-```bash
-sudo modprobe vhost_vsock
-```
-
-```bash
 sudo \
 MANAGER_QEMU_SMP_MAXCPUS=4 \
-MANAGER_GRPC_URL=localhost:7001 \
+MANAGER_QEMU_MEMORY_SIZE=4G \
+MANAGER_GRPC_HOST=localhost \
+MANAGER_GRPC_PORT=7002 \
 MANAGER_LOG_LEVEL=debug \
-MANAGER_QEMU_USE_SUDO=false  \
-MANAGER_QEMU_ENABLE_SEV=false \
-MANAGER_QEMU_SEV_CBITPOS=51 \
 MANAGER_QEMU_ENABLE_SEV_SNP=false \
 MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
 MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd \
 go run main.go
 ```
 
-This will start on a specific port called `agent_port`, which will be in the manager logs.
-
-For example,
+Expected output:
 
 ```bash
-{"time":"2024-07-26T11:45:08.503149211+03:00","level":"INFO","msg":"manager_test_server service gRPC server listening at :7001 without TLS"}
-{"time":"2024-07-26T11:45:14.827479501+03:00","level":"DEBUG","msg":"received who am on ip address [::1]:47936"}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721983514 nanos:832365721} computation_id:"1" originator:"manager" status:"starting"}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721983514 nanos:833034946} computation_id:"1" originator:"manager" status:"in-progress"}
-received agent log
-&{message:"char device redirected to /dev/pts/15 (label compat_monitor0)\n" computation_id:"1" level:"debug" timestamp:{seconds:1721983514 nanos:849595083}}
-received agent log
-&{message:"\x1b[2J\x1b[0" computation_id:"1" level:"debug" timestamp:{seconds:1721983515 nanos:215753406}}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721983527 nanos:970098872} computation_id:"1" originator:"manager" status:"complete"}
-received runRes
-&{agent_port:"43045" computation_id:"1"}
-received agent log
-&{message:"Transition: receivingManifest -> receivingManifest\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1721983527 nanos:966911139}}
-received agent log
+{"time":"...","level":"INFO","msg":"Manager started without confidential computing support"}
+{"time":"...","level":"INFO","msg":"manager service gRPC server listening at localhost:7002 without TLS"}
 ```
 
-## Uploading the algorithm and dataset
+### Create CVM and Upload Algorithm
+
+#### Create CVM
+
+From your cocos directory:
 
 ```bash
-export AGENT_GRPC_URL=localhost:43045
+export MANAGER_GRPC_URL=localhost:7002
+./build/cocos-cli create-vm --log-level debug --server-url "<YOUR_HOST_IP>:7001"
 ```
 
-Upload the algorithm to the enclave.
+**Important:** Note the id and port from the cocos-cli output.
+
+Expected output:
+
+```bash
+🔗 Connected to manager using  without TLS
+🔗 Creating a new virtual machine
+✅ Virtual machine created successfully with id <CVM_ID> and port <AGENT_PORT>
+```
+
+#### Export Agent gRPC URL
+
+Set the AGENT_GRPC_URL using the port noted in the previous step:
+
+```bash
+export AGENT_GRPC_URL=localhost:<AGENT_PORT>
+```
+
+#### Upload Addition Algorithm
+
+From your cocos directory:
 
 ```bash
 ./build/cocos-cli algo ./addition ./private.pem
 ```
 
-Upload the dataset to the enclave. Since this algorithm does not require a dataset, we can skip this step.
+Expected output:
 
 ```bash
-./build/cocos-cli dataset <dataset-file> ./private.pem
+🔗 Connected to agent  without TLS
+Uploading algorithm file: ./addition
+🚀 Uploading algorithm [███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████] [100%]                               
+Successfully uploaded algorithm! ✔ 
 ```
 
-## Downloading the results
+#### Upload Dataset (if required)
 
-After the computation has been completed, you can download the results from the enclave.
+For algorithms that require datasets:
+
+```bash
+./build/cocos-cli data <dataset-file> ./private.pem
+```
+
+**Note:** The addition example doesn't require a dataset, so this step can be skipped.
+
+#### Download Results
+
+After the computation completes:
 
 ```bash
 ./build/cocos-cli result ./private.pem
 ```
 
-This will generate a `result.zip` file in the current directory. Unzip the file to get the result.
+Expected output:
 
 ```bash
-unzip result.zip
+🔗 Connected to agent  without TLS
+⏳ Retrieving computation result file
+📥 Downloading result [██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████] [100%]                               
+Computation result retrieved and saved successfully as results.zip! ✔ 
 ```
 
-For the addition example, we can read the output from the `result.txt` file which contains the result of the addition algorithm. This file is gotten from the `result.zip` file.
-
-To read the result, run the following command.
+#### Extract and View Results
 
 ```bash
-cat result.txt
+unzip results.zip
+cat results/result.txt
 ```
 
-You can also build the addition algorithm with the `read` feature to read the result from the enclave.
+For the addition example, you can also read the result using the built binary:
 
 ```bash
+cd burn-algorithms
 cargo build --release --bin addition --features read
+./target/release/addition ../cocos/results/result.txt
 ```
 
-Run the binary with the `result.txt` file as an argument.
-
-```bash
-./target/release/addition ../../cocos/results.txt
-```
-
-This will output the result of the addition algorithm.
+Expected output:
 
 ```bash
 "[5.141593, 4.0, 5.0, 8.141593]"
 ```
 
-Terminal recording of the above steps:
+#### Remove CVM
 
-[![asciicast](https://asciinema.org/a/LzH6RLi1r69hYBhx3qaOIn4ER.svg)](https://asciinema.org/a/LzH6RLi1r69hYBhx3qaOIn4ER)
-
-## Wasm Module
-
-For the addition inference example we can build the addition algorithm(this happens in the burn-algorithms/addition-inference directory).
+Use the `<CVM_ID>` obtained during CVM creation:
 
 ```bash
+./build/cocos-cli remove-vm <CVM_ID>
+```
+
+Expected output:
+
+```bash
+🔗 Connected to manager using  without TLS
+🔗 Removing virtual machine
+✅ Virtual machine removed successfully
+```
+
+## WASM Module Example
+
+### Build WASM Module
+
+For the addition inference example:
+
+```bash
+cd burn-algorithms/addition-inference
 cargo build --release --target wasm32-wasip1 --features cocos
+cp ../target/wasm32-wasip1/release/addition-inference.wasm ../../../cocos/
+cd ../../../cocos
 ```
 
-Copy the built wasm module from `/target/wasm32-wasip1/release/addition_inference.wasm` to the directoy where you will run the computation server.
+### Run with CVMS
+
+Start the CVMS server with the WASM module:
 
 ```bash
-cp ../target/wasm32-wasip1/release/addition-inference.wasm ../../../cocos
+HOST=<YOUR_HOST_IP> go run ./test/cvms/main.go -algo-path ./addition-inference.wasm -public-key-path public.pem -attested-tls-bool false
 ```
 
-For example, to run the `addition-inference` algorithm, run the following command (this happens in the cocos directory). Since the addition-inference algorithm does not require any dataset, the dataset path is empty.
-
-```bash
-go run ./test/computations/main.go ./addition-inference.wasm public.pem true
-```
-
-Start the manager.
-
-```bash
-cd cmd/manager
-```
-
-```bash
-sudo \
-MANAGER_QEMU_SMP_MAXCPUS=4 \
-MANAGER_GRPC_URL=localhost:7001 \
-MANAGER_LOG_LEVEL=debug \
-MANAGER_QEMU_USE_SUDO=false  \
-MANAGER_QEMU_ENABLE_SEV=false \
-MANAGER_QEMU_SEV_CBITPOS=51 \
-MANAGER_QEMU_ENABLE_SEV_SNP=false \
-MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
-MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd \
-go run main.go
-```
-
-This will start on a specific port called `agent_port`, which will be in the manager logs.
-
-For example,
-
-```bash
-{"time":"2024-08-06T10:54:53.42640029+03:00","level":"INFO","msg":"manager_test_server service gRPC server listening at :7001 without TLS"}
-{"time":"2024-08-06T10:54:55.953576985+03:00","level":"DEBUG","msg":"received who am on ip address [::1]:50528"}
-received agent event
-&{event_type:"vm-provision"  timestamp:{seconds:1722930895  nanos:957553381}  computation_id:"1"  originator:"manager"  status:"starting"}
-received agent event
-&{event_type:"vm-provision"  timestamp:{seconds:1722930895  nanos:958021704}  computation_id:"1"  originator:"manager"  status:"in-progress"}
-received agent log
-&{message:"char device redirected to /dev/pts/10 (label compat_monitor0)\n"  computation_id:"1"  level:"debug"  timestamp:{seconds:1722930896  nanos:39152844}}
-received agent log
-&{message:"\x1b["  computation_id:"1"  level:"debug"  timestamp:{seconds:1722930898  nanos:319429985}}
-received agent event
-&{event_type:"vm-provision"  timestamp:{seconds:1722930911  nanos:886580521}  computation_id:"1"  originator:"manager"  status:"complete"}
-received runRes
-&{agent_port:"46593"  computation_id:"1"}
-received agent log
-&{message:"Transition: receivingManifest -> receivingManifest\n"  computation_id:"1"  level:"DEBUG"  timestamp:{seconds:1722930911  nanos:859764366}}
-received agent event
-```
-
-```bash
-export AGENT_GRPC_URL=localhost:46593
-```
-
-Upload the algorithm to the enclave. The `-a wasm` flag is used to specify that the algorithm is a wasm module.
+Follow the same CVM creation and management steps as above, but upload the algorithm with the WASM flag:
 
 ```bash
 ./build/cocos-cli algo ./addition-inference.wasm ./private.pem -a wasm
 ```
 
-Upload the dataset to the enclave. Since this algorithm does not require a dataset, we can skip this step.
+## Notes
 
-```bash
-./build/cocos-cli dataset <dataset-file> ./private.pem
-```
+- **Memory Requirements**: 4GB is sufficient for most basic examples; increase as needed for complex algorithms
+- **WASM Support**: Both binary and WASM modules are supported, with WASM providing better portability
+- **Security**: The enclave provides confidential computing capabilities for sensitive workloads
+- **Datasets**: Not all algorithms require datasets; the addition example works without external data
+- **Results Format**: Results are packaged in ZIP files and can contain multiple output files
 
-After the computation has been completed, you can download the results from the enclave.
+### Terminal Recordings
 
-```bash
-./build/cocos-cli result ./private.pem
-```
-
-This will generate a `result.zip` file in the current directory. Unzip the file to get the result.
-
-```bash
-unzip result.zip
-```
-
-For the addition example, we can read the output from the `results/results.txt` file which contains the result of the addition algorithm. This file is gotten from the `result.zip` file.
-
-To read the result, run the following command.
-
-```bash
-cat results/results.txt
-```
-
-Terminal recording of the above steps:
-
-[![asciicast](https://asciinema.org/a/vKnxV4A9HXloD8g1xJRvw7h3T.svg)](https://asciinema.org/a/vKnxV4A9HXloD8g1xJRvw7h3T)
-
-## Conclusion
-
-This documentation has shown how to run the addition algorithm in the enclave using the Cocos system. The addition algorithm was built as a binary target and a wasm module. The results were downloaded from the enclave and read to get the output of the addition algorithm. This process can be followed to run other algorithms in the enclave using the Cocos system.
+- Binary example: [![asciicast](https://asciinema.org/a/LzH6RLi1r69hYBhx3qaOIn4ER.svg)](https://asciinema.org/a/LzH6RLi1r69hYBhx3qaOIn4ER)
+- WASM example: [![asciicast](https://asciinema.org/a/vKnxV4A9HXloD8g1xJRvw7h3T.svg)](https://asciinema.org/a/vKnxV4A9HXloD8g1xJRvw7h3T)

@@ -96,9 +96,11 @@ Make sure you have the Cocos repository cloned and set up. This can be done by f
    Zip the hospital datasets for uploading:
 
    ```bash
-   zip -r datasets/h1.zip datasets/h1
-   zip -r datasets/h2.zip datasets/h2
-   zip -r datasets/h3.zip datasets/h3
+   cd datasets
+   zip -r h1.zip h1
+   zip -r h2.zip h2
+   zip -r h3.zip h3
+   cd ..
    ```
 
 4. **Change to cocos directory and build artifacts:**

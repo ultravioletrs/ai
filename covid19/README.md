@@ -15,7 +15,7 @@ PyTorch can be installed from the [PyTorch website](https://pytorch.org/get-star
 For example, to install on a linux system with ROCm support, you can run:
 
 ```bash
-pip3 install torch~=2.3.1 torchvision~=0.18.1 --index-url https://download.pytorch.org/whl/rocm6.0
+pip3 install torch~=2.6.0 torchvision~=0.21.0 --index-url https://download.pytorch.org/whl/rocm6.0
 ```
 
 ## Install
@@ -117,7 +117,7 @@ Before running the computation server, we need to issue certificates for the com
 Run the computation server:
 
 ```bash
-go run ./test/computations/main.go ../ai/covid19/train.py public.pem false ../ai/covid19/datasets/h1.zip ../ai/covid19/datasets/h2.zip ../ai/covid19/datasets/h3.zip
+HOST=192.168.100.27 go run ./test/cvms/main.go -algo-path ../ai/covid19/train.py -public-key-path public.pem -attested-tls-bool false -data-paths ../ai/covid19/datasets/h1.zip,../ai/covid19/datasets/h2.zip,../ai/covid19/datasets/h3.zip
 ```
 
 On another terminal, run manager:
@@ -132,7 +132,8 @@ Make sure you have the `bzImage` and `rootfs.cpio.gz` in the `cmd/manager/img` d
 sudo \
 MANAGER_QEMU_SMP_MAXCPUS=4 \
 MANAGER_QEMU_MEMORY_SIZE=25G \
-MANAGER_GRPC_URL=localhost:7001 \
+MANAGER_GRPC_HOST=localhost \
+MANAGER_GRPC_PORT= 7002 \
 MANAGER_LOG_LEVEL=debug \
 MANAGER_QEMU_ENABLE_SEV_SNP=false \
 MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
@@ -145,28 +146,14 @@ After sometime you will see the computation server will output a port number. Th
 The logs will look like this:
 
 ```bash
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721816170 nanos:825593350} computation_id:"1" originator:"manager" status:"starting"}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721816170 nanos:826050932} computation_id:"1" originator:"manager" status:"in-progress"}
-received agent log
-&{message:"char device redirected to /dev/pts/17 (label compat_monitor0)\n" computation_id:"1" level:"debug" timestamp:{seconds:1721816170 nanos:927805046}}
-received agent log
-&{message:"qemu-system-x86_64: warning: Number of hotpluggable cpus requested (64) exceeds the recommended cpus supported by KVM (24)\n" computation_id:"1" level:"error" timestamp:{seconds:1721816170 nanos:953823551}}
-received agent log
-&{message:"S" computation_id:"1" level:"debug" timestamp:{seconds:1721816172 nanos:583261451}}
-received agent log
-&{message:"e" computation_id:"1" level:"debug" timestamp:{seconds:1721816172 nanos:583288633}}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721816191 nanos:936892540} computation_id:"1" originator:"manager" status:"complete"}
-received runRes
-&{agent_port:"46589" computation_id:"1"}
-received agent log
-&{message:"Transition: receivingManifest -> receivingManifest\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1721816191 nanos:933814929}}
-received agent log
-&{message:"agent service gRPC server listening at :7002 without TLS" computation_id:"1" level:"INFO" timestamp:{seconds:1721816191 nanos:934464476}}
-received agent event
-&{event_type:"receivingAlgorithm" timestamp:{seconds:1721816191 nanos:934190831} computation_id:"1" originator:"agent" status:"in-progress"}
+{"time":"2025-08-20T14:36:27.156171875+03:00","level":"INFO","msg":"cvms_test_server service gRPC server listening at 192.168.100.27:7001 without TLS"}
+{"time":"2025-08-20T14:45:31.016663955+03:00","level":"DEBUG","msg":"received who am on ip address 192.168.100.27:56466"}
+&{message:"TEE device not found"  level:"INFO"  timestamp:{seconds:1755690331  nanos:7261868}}
+&{}
+&{message:"Method InitComputation for computation id 1 took 3.015µs to complete without errors"  computation_id:"1"  level:"INFO"  timestamp:{seconds:1755690331  nanos:345076481}}
+&{computation_id:"1"}
+&{message:"agent service gRPC server listening at 10.0.2.15:7002 without TLS"  computation_id:"1"  level:"INFO"  timestamp:{seconds:1755690331  nanos:345224719}}
+&{event_type:"ReceivingAlgorithm"  timestamp:{seconds:1755690331  nanos:345227613}  computation_id:"1"  originator:"agent"  status:"InProgress"}
 ```
 
 On another terminal, upload the artifacts to the computation server:
@@ -182,9 +169,9 @@ export AGENT_GRPC_URL=localhost:<port_number>
 Upload the data to the computation server:
 
 ```bash
-./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem
-./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem
-./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem
+./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem -d
+./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem -d
+./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem -d
 ```
 
 When the results are ready, download the results:
@@ -290,48 +277,24 @@ You need to have done the following:
 - Create a user at `localhost:9095`
 - Create a workspace
 - Login to the created workspace
-- Create a backend with `localhost` as the address
-- Issue Certs for the backend, request download and download the certs
-- Unzip the folder and copy the contents to the managers `cmd/manager/` directory under `cocos` folder
-- Start the manager with the backend address: Take note the memory size is set to `25G` since we will be downloading pytorch and pretrained model inside the VM
-
-  ```bash
-  cd cmd/manager
-  ```
-
-  Make sure you have the `bzImage` and `rootfs.cpio.gz` in the `cmd/manager/img` directory.
-
-  ```bash
-  sudo \                                                                                                                                      (main|…1⚑2)
-  MANAGER_QEMU_SMP_MAXCPUS=4 \
-  MANAGER_QEMU_MEMORY_SIZE=25G \
-  MANAGER_GRPC_URL=localhost:7011 \
-  MANAGER_LOG_LEVEL=debug \
-  MANAGER_QEMU_ENABLE_SEV_SNP=false \
-  MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
-  MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd \
-  MANAGER_GRPC_CLIENT_CERT=cert.pem \
-  MANAGER_GRPC_CLIENT_KEY=key.pem \
-  MANAGER_GRPC_SERVER_CA_CERTS=ca.pem \
-  go run main.go
-  ```
+- Create a cvm and wait for it to come online
 
 - Create the covid computation. To get the filehash for all the files go to `cocos` folder and use the cocos-cli. For the file names use `h1.zip`, `h2.zip`, `h3.zip` and `train.py`
 
   ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/datasets/h1.zip
+  ./build/cocos-cli checksum ../ai/covid19/datasets/h1.zip
   ```
 
   ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/datasets/h2.zip
+  ./build/cocos-cli checksum ../ai/covid19/datasets/h2.zip
   ```
 
   ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/datasets/h3.zip
+  ./build/cocos-cli checksum ../ai/covid19/datasets/h3.zip
   ```
 
   ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/train.py
+  ./build/cocos-cli checksum ../ai/covid19/train.py
   ```
 
 - After the computation has been created upload your public key generate by `cocos-cli`. This key will enable you to upload the datatsets and algorithms and also download the results.
@@ -353,15 +316,15 @@ You need to have done the following:
   ```
 
   ```bash
-  ./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem
+  ./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem -d
   ```
 
   ```bash
-  ./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem
+  ./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem -d
   ```
 
   ```bash
-  ./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem
+  ./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem -d
   ```
 
 - The computation will run and you will get an event that the results are ready. You can download the results by running the following command:

@@ -76,7 +76,8 @@ pub fn train<B: AutodiffBackend, D: Dataset<ClassificationItem> + 'static>(
     let lr_scheduler = NoamLrSchedulerConfig::new(config.learning_rate)
         .with_warmup_steps(1000)
         .with_model_size(config.transformer.d_model)
-        .init();
+        .init()
+        .unwrap();
 
     let learner = if cfg!(feature = "cocos") {
         LearnerBuilder::new(artifact_dir)

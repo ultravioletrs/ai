@@ -15,7 +15,7 @@ PyTorch can be installed from the [PyTorch website](https://pytorch.org/get-star
 For example, to install on a linux system with ROCm support, you can run:
 
 ```bash
-pip3 install torch~=2.3.1 torchvision~=0.18.1 --index-url https://download.pytorch.org/whl/rocm6.0
+pip3 install torch~=2.6.0 torchvision~=0.21.0 --index-url https://download.pytorch.org/whl/rocm6.0
 ```
 
 ## Install
@@ -48,7 +48,7 @@ python train.py
 
 ## Test Model
 
-Inference can be done using `predict.py`. Anyfile in the `datasets/test` directory can be used for testing.
+Inference can be done using `predict.py`. Any file in the `datasets/test` directory can be used for testing.
 
 ```bash
 python predict.py --model results/model.pth --image datasets/test/COVID/COVID-2.png
@@ -56,83 +56,104 @@ python predict.py --model results/model.pth --image datasets/test/COVID/COVID-2.
 
 ## Testing with Cocos
 
-Make sure you have the Cocos repository cloned and eos buildroot installed. This can be done by following the instructions in the [Cocos Documentation](https://docs.cocos.ultraviolet.rs/getting-started/)
+Make sure you have the Cocos repository cloned and set up. This can be done by following the instructions in the [Cocos Documentation](https://docs.cocos.ultraviolet.rs/getting-started/)
 
-Clone the ai repository which has the COVID-19 model:
+### Prerequisites
+
+1. **Clone the repositories:**
+
+   ```bash
+   git clone https://github.com/ultravioletrs/cocos.git
+   git clone https://github.com/ultravioletrs/ai.git
+   ```
+
+2. **Navigate to the COVID-19 directory:**
+
+   ```bash
+   cd ai/covid19
+   ```
+
+3. **Download and prepare the dataset:**
+
+   Install kaggle-cli to download the dataset:
+
+   ```bash
+   pip install kaggle
+   ```
+
+   Set the [kaggle API key](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and download the dataset:
+
+   ```bash
+   kaggle datasets download -d tawsifurrahman/covid19-radiography-database
+   ```
+
+   Prepare the dataset:
+
+   ```bash
+   python tools/prepare_datasets.py covid19-radiography-database.zip -d datasets
+   ```
+
+   Zip the hospital datasets for uploading:
+
+   ```bash
+   cd datasets
+   zip -r h1.zip h1
+   zip -r h2.zip h2
+   zip -r h3.zip h3
+   cd ..
+   ```
+
+4. **Change to cocos directory and build artifacts:**
+
+   ```bash
+   cd ../../cocos
+   make all
+   ```
+
+5. **Generate keys:**
+
+   ```bash
+   ./build/cocos-cli keys -k="rsa"
+   ```
+
+### Finding Your Host IP Address
+
+Find your host machine's IP address (avoid using localhost):
 
 ```bash
-git clone https://github.com/ultravioletrs/ai.git
+ip a
 ```
 
+Look for your network interface (e.g., wlan0 for WiFi, eth0 for Ethernet) and note the inet address. For example, if you see `192.168.1.100`, use that as your `<YOUR_HOST_IP>`.
+
+### Start Core Services
+
+#### Start the Computation Management Server (CVMS)
+
+From your cocos directory, start the CVMS server with the COVID-19 algorithm and datasets:
+
 ```bash
-cd ai/covid19
+cd cocos
+HOST=<YOUR_HOST_IP> go run ./test/cvms/main.go -algo-path ../ai/covid19/train.py -public-key-path public.pem -attested-tls-bool false -data-paths ../ai/covid19/datasets/h1.zip,../ai/covid19/datasets/h2.zip,../ai/covid19/datasets/h3.zip
 ```
 
-Download the data from [COVID-19 Radiography Database](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) dataset.
-
-You can install kaggle-cli to download the dataset:
+Expected output:
 
 ```bash
-pip install kaggle
+{"time":"...","level":"INFO","msg":"cvms_test_server service gRPC server listening at <YOUR_HOST_IP>:7001 without TLS"}
 ```
 
-Set the [kaggle API key](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and download the dataset:
+#### Start the Manager
+
+Navigate to the cocos/cmd/manager directory and start the Manager (increase memory for COVID-19 training):
 
 ```bash
-kaggle datasets download -d tawsifurrahman/covid19-radiography-database
-```
-
-Prepare the dataset:
-
-```bash
-python tools/prepare_datasets.py covid19-radiography-database.zip -d datasets
-```
-
-Zip the folders:
-
-```bash
-zip -r datasets/h1.zip datasets/h1
-zip -r datasets/h2.zip datasets/h2
-zip -r datasets/h3.zip datasets/h3
-```
-
-Change the directory to cocos:
-
-```bash
-cd ../../cocos
-```
-
-Build cocos artifacts:
-
-```bash
-make all
-```
-
-Before running the computation server, we need to issue certificates for the computation server and the client. This can be done by running the following commands:
-
-```bash
-./build/cocos-cli keys -k="rsa"
-```
-
-Run the computation server:
-
-```bash
-go run ./test/computations/main.go ../ai/covid19/train.py public.pem false ../ai/covid19/datasets/h1.zip ../ai/covid19/datasets/h2.zip ../ai/covid19/datasets/h3.zip
-```
-
-On another terminal, run manager:
-
-```bash
-cd cmd/manager
-```
-
-Make sure you have the `bzImage` and `rootfs.cpio.gz` in the `cmd/manager/img` directory.
-
-```bash
+cd cocos/cmd/manager
 sudo \
 MANAGER_QEMU_SMP_MAXCPUS=4 \
 MANAGER_QEMU_MEMORY_SIZE=25G \
-MANAGER_GRPC_URL=localhost:7001 \
+MANAGER_GRPC_HOST=localhost \
+MANAGER_GRPC_PORT=7002 \
 MANAGER_LOG_LEVEL=debug \
 MANAGER_QEMU_ENABLE_SEV_SNP=false \
 MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
@@ -140,254 +161,250 @@ MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd \
 go run main.go
 ```
 
-After sometime you will see the computation server will output a port number. This port number is the port on which the computation server is running. You can use this port number to run the client.
-
-The logs will look like this:
+Expected output:
 
 ```bash
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721816170 nanos:825593350} computation_id:"1" originator:"manager" status:"starting"}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721816170 nanos:826050932} computation_id:"1" originator:"manager" status:"in-progress"}
-received agent log
-&{message:"char device redirected to /dev/pts/17 (label compat_monitor0)\n" computation_id:"1" level:"debug" timestamp:{seconds:1721816170 nanos:927805046}}
-received agent log
-&{message:"qemu-system-x86_64: warning: Number of hotpluggable cpus requested (64) exceeds the recommended cpus supported by KVM (24)\n" computation_id:"1" level:"error" timestamp:{seconds:1721816170 nanos:953823551}}
-received agent log
-&{message:"S" computation_id:"1" level:"debug" timestamp:{seconds:1721816172 nanos:583261451}}
-received agent log
-&{message:"e" computation_id:"1" level:"debug" timestamp:{seconds:1721816172 nanos:583288633}}
-received agent event
-&{event_type:"vm-provision" timestamp:{seconds:1721816191 nanos:936892540} computation_id:"1" originator:"manager" status:"complete"}
-received runRes
-&{agent_port:"46589" computation_id:"1"}
-received agent log
-&{message:"Transition: receivingManifest -> receivingManifest\n" computation_id:"1" level:"DEBUG" timestamp:{seconds:1721816191 nanos:933814929}}
-received agent log
-&{message:"agent service gRPC server listening at :7002 without TLS" computation_id:"1" level:"INFO" timestamp:{seconds:1721816191 nanos:934464476}}
-received agent event
-&{event_type:"receivingAlgorithm" timestamp:{seconds:1721816191 nanos:934190831} computation_id:"1" originator:"agent" status:"in-progress"}
+{"time":"...","level":"INFO","msg":"Manager started without confidential computing support"}
+{"time":"...","level":"INFO","msg":"manager service gRPC server listening at localhost:7002 without TLS"}
 ```
 
-On another terminal, upload the artifacts to the computation server:
+### Create CVM and Upload COVID-19 Algorithm
+
+#### Create CVM
+
+From your cocos directory:
 
 ```bash
-export AGENT_GRPC_URL=localhost:<port_number>
+export MANAGER_GRPC_URL=localhost:7002
+./build/cocos-cli create-vm --log-level debug --server-url "<YOUR_HOST_IP>:7001"
 ```
+
+**Important:** Note the id and port from the cocos-cli output.
+
+Expected output:
+
+```bash
+🔗 Connected to manager using  without TLS
+🔗 Creating a new virtual machine
+✅ Virtual machine created successfully with id <CVM_ID> and port <AGENT_PORT>
+```
+
+Expected CVMS server output:
+
+```bash
+&{message:"Method InitComputation for computation id 1 took ... to complete without errors"  computation_id:"1"  level:"INFO"  timestamp:{...}}
+&{event_type:"ReceivingAlgorithm"  timestamp:{...}  computation_id:"1"  originator:"agent"  status:"InProgress"}
+&{message:"agent service gRPC server listening at 10.0.2.15:<AGENT_PORT> without TLS"  computation_id:"1"  level:"INFO"  timestamp:{...}}
+```
+
+#### Export Agent gRPC URL
+
+Set the AGENT_GRPC_URL using the port noted in the previous step (default 6100):
+
+```bash
+export AGENT_GRPC_URL=localhost:<AGENT_PORT>
+```
+
+#### Upload COVID-19 Algorithm
+
+From your cocos directory:
 
 ```bash
 ./build/cocos-cli algo ../ai/covid19/train.py ./private.pem -a python -r ../ai/covid19/requirements.txt
 ```
 
-Upload the data to the computation server:
+Expected output:
 
 ```bash
-./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem
-./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem
-./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem
+🔗 Connected to agent  without TLS
+Uploading algorithm file: ../ai/covid19/train.py
+🚀 Uploading algorithm [███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████] [100%]                               
+Successfully uploaded algorithm! ✔ 
 ```
 
-When the results are ready, download the results:
+#### Upload COVID-19 Datasets
+
+Upload each hospital dataset:
+
+```bash
+./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem -d
+./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem -d
+./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem -d
+```
+
+Expected output for each upload:
+
+```bash
+🔗 Connected to agent  without TLS
+Uploading dataset: ../ai/covid19/datasets/h1.zip
+📦 Uploading data [██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████] [100%]                               
+Successfully uploaded dataset! ✔ 
+```
+
+Watch the CVMS server logs for training progress. The COVID-19 training process may take significant time due to the large dataset and model complexity. Look for completion messages:
+
+```bash
+&{message:"Method Data took ... to complete without errors"  computation_id:"1"  level:"INFO"  timestamp:{...}}
+&{event_type:"Running"  timestamp:{...}  computation_id:"1"  originator:"agent"  status:"Starting"}
+&{event_type:"Running"  timestamp:{...}  computation_id:"1"  originator:"agent"  status:"Completed"}
+&{event_type:"ConsumingResults"  timestamp:{...}  computation_id:"1"  originator:"agent"  status:"Ready"}
+```
+
+#### Download COVID-19 Results
+
+From your cocos directory:
 
 ```bash
 ./build/cocos-cli result ./private.pem
 ```
 
-The above will generate a `results.zip` file. Copy this file to the ai directory:
+Expected output:
 
 ```bash
-cp results.bin ../ai/covid19/
+🔗 Connected to agent  without TLS
+⏳ Retrieving computation result file
+📥 Downloading result [██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████] [100%]                               
+Computation result retrieved and saved successfully as results.zip! ✔ 
 ```
 
-Test the model with the test data:
+#### Test the Trained Model
+
+1. Copy results to the COVID-19 directory:
+
+   ```bash
+   cp results.zip ../ai/covid19/
+   ```
+
+2. Navigate to COVID-19 directory and extract results:
+
+   ```bash
+   cd ../ai/covid19
+   unzip results.zip -d results
+   ```
+
+3. Test the model with test data (use any image from the test dataset):
+
+   ```bash
+   python predict.py --model results/model.pth --image datasets/test/COVID/COVID-2.png
+   ```
+
+Expected output will show the predicted class (Normal, Viral Pneumonia, or COVID-19).
+
+#### Remove COVID-19 CVM
+
+Use the `<CVM_ID>` obtained during CVM creation:
 
 ```bash
-cd ../ai/covid19
+./build/cocos-cli remove-vm <CVM_ID>
 ```
 
-```bash
-unzip results.zip -d results
-```
-
-The image can be any image from the test dataset:
+Expected output:
 
 ```bash
-python predict.py --model results/model.pth --image datasets/test/COVID/COVID-2.png
+🔗 Connected to manager using  without TLS
+🔗 Removing virtual machine
+✅ Virtual machine removed successfully
 ```
 
 ## Testing with Prism
 
-Make sure you have the Cocos repository cloned and eos buildroot installed. This can be done by following the instructions in the [Cocos Documentation](https://docs.cocos.ultraviolet.rs/getting-started/)
+Prism provides a web-based interface for managing Cocos computations.
 
-Clone the ai repository which has the COVID-19 model:
+### Prerequisites
+
+1. **Clone and start Prism:**
+
+   ```bash
+   git clone https://github.com/ultravioletrs/prism.git
+   cd prism
+   make run
+   ```
+
+2. **Prepare COVID-19 datasets** (follow the same steps as in the Cocos section above)
+
+3. **Build Cocos artifacts:**
+
+   ```bash
+   cd cocos
+   make all
+   ```
+
+4. **Generate keys:**
+
+   ```bash
+   ./build/cocos-cli keys -k="rsa"
+   ```
+
+### Prism Setup Process
+
+1. **Create a user account**
+2. **Create a workspace**
+3. **Login to the created workspace**
+4. **Create a CVM** and wait for it to come online
+5. **Create the computation** and set a name and description.
+6. Add participants using computation roles.
+
+### Create COVID-19 Computation
+
+To create the computation in Prism, you'll need sha3-256 checksums for all datasets and the algorithm. Generate these from the cocos folder:
 
 ```bash
-git clone https://github.com/ultravioletrs/ai.git
+./build/cocos-cli checksum ../ai/covid19/datasets/h1.zip
+./build/cocos-cli checksum ../ai/covid19/datasets/h2.zip
+./build/cocos-cli checksum ../ai/covid19/datasets/h3.zip
+./build/cocos-cli checksum ../ai/covid19/train.py
 ```
 
+Use the file names `h1.zip`, `h2.zip`, `h3.zip`, and `train.py` when creating the computation asset in Prism. Link the assets to the computation.
+
+### Upload Public Key
+
+After creating the computation, upload your public key generated by `cocos-cli`. This enables you to upload datasets/algorithms and download results:
+
 ```bash
-cd ai/covid19
+cat public.pem
 ```
 
-Download the data from [COVID-19 Radiography Database](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) dataset.
+### Run Computation
 
-You can install kaggle-cli to download the dataset:
+1. **Click "Run Computation"** and select an available cvm.
+2. **Copy the agent port number** and export it:
 
-```bash
-pip install kaggle
-```
+   ```bash
+   export AGENT_GRPC_URL=localhost:<AGENT_PORT>
+   ```
 
-Set the [kaggle API key](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md#api-credentials) and download the dataset:
+3. **Upload the algorithm and datasets:**
 
-```bash
-kaggle datasets download -d tawsifurrahman/covid19-radiography-database
-```
+   ```bash
+   ./build/cocos-cli algo ../ai/covid19/train.py ./private.pem -a python -r ../ai/covid19/requirements.txt
+   ./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem
+   ./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem
+   ./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem
+   ```
 
-Prepare the dataset:
+4. **Monitor the computation** through the Prism interface until you receive an event indicating results are ready
 
-```bash
-python tools/prepare_datasets.py covid19-radiography-database.zip -d datasets
-```
+5. **Download the results:**
 
-Zip the folders:
+   ```bash
+   ./build/cocos-cli result ./private.pem
+   ```
 
-```bash
-zip -r datasets/h1.zip datasets/h1
-zip -r datasets/h2.zip datasets/h2
-zip -r datasets/h3.zip datasets/h3
-```
+### Test Results
 
-Start prism
-
-```bash
-git clone https://github.com/ultravioletrs/prism.git
-```
+Follow the same testing steps as in the Cocos section:
 
 ```bash
-cd prism
-```
-
-```bash
-make run
-```
-
-The following recording will demonstrate how to setup prism - https://jam.dev/c/8067f697-4eaa-407f-875a-17119e4f3901
-
-Build cocos artifacts:
-
-```bash
-make all
-```
-
-Before running the computation server, we need to issue certificates for the computation server and the client. This can be done by running the following commands:
-
-```bash
-./build/cocos-cli keys -k="rsa"
-```
-
-You need to have done the following:
-
-- Create a user at `localhost:9095`
-- Create a workspace
-- Login to the created workspace
-- Create a backend with `localhost` as the address
-- Issue Certs for the backend, request download and download the certs
-- Unzip the folder and copy the contents to the managers `cmd/manager/` directory under `cocos` folder
-- Start the manager with the backend address: Take note the memory size is set to `25G` since we will be downloading pytorch and pretrained model inside the VM
-
-  ```bash
-  cd cmd/manager
-  ```
-
-  Make sure you have the `bzImage` and `rootfs.cpio.gz` in the `cmd/manager/img` directory.
-
-  ```bash
-  sudo \                                                                                                                                      (main|…1⚑2)
-  MANAGER_QEMU_SMP_MAXCPUS=4 \
-  MANAGER_QEMU_MEMORY_SIZE=25G \
-  MANAGER_GRPC_URL=localhost:7011 \
-  MANAGER_LOG_LEVEL=debug \
-  MANAGER_QEMU_ENABLE_SEV_SNP=false \
-  MANAGER_QEMU_OVMF_CODE_FILE=/usr/share/edk2/x64/OVMF_CODE.fd \
-  MANAGER_QEMU_OVMF_VARS_FILE=/usr/share/edk2/x64/OVMF_VARS.fd \
-  MANAGER_GRPC_CLIENT_CERT=cert.pem \
-  MANAGER_GRPC_CLIENT_KEY=key.pem \
-  MANAGER_GRPC_SERVER_CA_CERTS=ca.pem \
-  go run main.go
-  ```
-
-- Create the covid computation. To get the filehash for all the files go to `cocos` folder and use the cocos-cli. For the file names use `h1.zip`, `h2.zip`, `h3.zip` and `train.py`
-
-  ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/datasets/h1.zip
-  ```
-
-  ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/datasets/h2.zip
-  ```
-
-  ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/datasets/h3.zip
-  ```
-
-  ```bash
-  ./build/cocos-cli file-hash ../ai/covid19/train.py
-  ```
-
-- After the computation has been created upload your public key generate by `cocos-cli`. This key will enable you to upload the datatsets and algorithms and also download the results.
-
-  ```bash
-  ./build/cocos-cli keys
-  ```
-
-- Click run computation and wait for the vm to be provisioned.Copy the aggent port number and export `AGENT_GRPC_URL`
-
-  ```bash
-  export AGENT_GRPC_URL=localhost:<port_number>
-  ```
-
-- After vm has been provisioned upload the datasets and the algorithm
-
-  ```bash
-  ./build/cocos-cli algo ../ai/covid19/train.py ./private.pem -a python -r ../ai/covid19/requirements.txt
-  ```
-
-  ```bash
-  ./build/cocos-cli data ../ai/covid19/datasets/h1.zip ./private.pem
-  ```
-
-  ```bash
-  ./build/cocos-cli data ../ai/covid19/datasets/h2.zip ./private.pem
-  ```
-
-  ```bash
-  ./build/cocos-cli data ../ai/covid19/datasets/h3.zip ./private.pem
-  ```
-
-- The computation will run and you will get an event that the results are ready. You can download the results by running the following command:
-
-  ```bash
-  ./build/cocos-cli results ./private.pem
-  ```
-
-The above will generate a `results.zip` file. Copy this file to the ai directory:
-
-```bash
-cp results.bin ../ai/covid19/
-```
-
-Test the model with the test data:
-
-```bash
+cp results.zip ../ai/covid19/
 cd ../ai/covid19
-```
-
-```bash
 unzip results.zip -d results
-```
-
-The image can be any image from the test dataset:
-
-```bash
 python predict.py --model results/model.pth --image datasets/test/COVID/COVID-2.png
 ```
+
+## Notes
+
+- The COVID-19 model training is computationally intensive and may require significant time and resources
+- Ensure adequate memory allocation (25GB recommended) when running the Manager
+- The model works with chest X-ray images and classifies them into three categories
+- Test images are available in the `datasets/test` directory after running the preparation script

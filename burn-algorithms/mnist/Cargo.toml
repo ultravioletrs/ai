@@ -26,13 +26,13 @@ path = "src/main.rs"
 required-features = ["cocos"]
 
 [dependencies]
-burn = { version = "0.16.0", features = [
+burn = { version = "0.18.0", features = [
     "dataset",
     "ndarray",
     "train",
     "vision",
     "wgpu",
 ] }
-burn-common = "0.16.0"
+burn-common = "0.18.0"
 serde = { version = "1.0.203", features = ["derive", "std"] }
 lib = { path = "../lib" }

@@ -27,7 +27,7 @@ required-features = ["cocos"]
 
 
 [dependencies]
-burn = { version = "0.16.0", features = [
+burn = { version = "0.18.0", features = [
     "dataset",
     "fusion",
     "ndarray",
@@ -37,7 +37,7 @@ burn = { version = "0.16.0", features = [
 csv = "1.3.0"
 derive-new = "0.7.0"
 serde = { version = "1.0.203", features = ["derive", "std"] }
-tokenizers = { version = "0.20.0", features = ["http", "onig"] }
+tokenizers = { version = "0.21.4", features = ["http", "onig"] }
 lib = { path = "../lib" }
 flate2 = "1.0.31"
 tar = "0.4.41"

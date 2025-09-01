@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -48,7 +48,7 @@ jobs:
           cargo build --release --features cocos
 
       - name: Generate Changelog using git-cliff
-        uses: tj-actions/git-cliff@v1
+        uses: tj-actions/git-cliff@v2
         with:
           args: --verbose
           output: "CHANGELOG.md"

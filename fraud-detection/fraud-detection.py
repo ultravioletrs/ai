@@ -1,5 +1,6 @@
 import os
-
+os.environ["OPENBLAS_L2_SIZE"]="1024"
+           
 import pandas as pd
 import xgboost as xgb
 from imblearn.combine import SMOTETomek

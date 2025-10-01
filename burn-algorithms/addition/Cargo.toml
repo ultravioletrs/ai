@@ -35,5 +35,5 @@ path = "src/main.rs"
 required-features = ["read"]
 
 [dependencies]
-burn = { version = "0.16.0", features = ["ndarray", "wgpu"] }
+burn = { version = "0.18.0", features = ["ndarray", "wgpu"] }
 lib = { path = "../lib" }

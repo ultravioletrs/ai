@@ -79,6 +79,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
             .metric_valid_numeric(LossMetric::new())
             .with_file_checkpointer(CompactRecorder::new())
             .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+                &LossMetric::new(),
                 Aggregate::Mean,
                 Direction::Lowest,
                 Split::Valid,
@@ -96,6 +97,7 @@ pub fn run<B: AutodiffBackend>(device: B::Device) {
             .metric_valid_numeric(LossMetric::new())
             .with_file_checkpointer(CompactRecorder::new())
             .early_stopping(MetricEarlyStoppingStrategy::new::<LossMetric<B>>(
+                &LossMetric::new(),
                 Aggregate::Mean,
                 Direction::Lowest,
                 Split::Valid,

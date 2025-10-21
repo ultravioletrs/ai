@@ -37,7 +37,6 @@ impl<B: Backend> Normalizer<B> {
 #[derive(Clone)]
 pub struct ClassificationBatcher<B: Backend> {
     normalizer: Normalizer<B>,
-    device: B::Device,
 }
 
 #[derive(Clone, Debug)]
@@ -50,13 +49,12 @@ impl<B: Backend> ClassificationBatcher<B> {
     pub fn new(device: B::Device) -> Self {
         Self {
             normalizer: Normalizer::<B>::new(&device),
-            device,
         }
     }
 }
 
-impl<B: Backend> Batcher<ImageDatasetItem, ClassificationBatch<B>> for ClassificationBatcher<B> {
-    fn batch(&self, items: Vec<ImageDatasetItem>) -> ClassificationBatch<B> {
+impl<B: Backend> Batcher<B, ImageDatasetItem, ClassificationBatch<B>> for ClassificationBatcher<B> {
+    fn batch(&self, items: Vec<ImageDatasetItem>, device: &B::Device) -> ClassificationBatch<B> {
         fn image_as_vec_u8(item: ImageDatasetItem) -> Vec<u8> {
             item.image
                 .into_iter()
@@ -70,7 +68,7 @@ impl<B: Backend> Batcher<ImageDatasetItem, ClassificationBatch<B>> for Classific
                 if let Annotation::Label(y) = item.annotation {
                     Tensor::<B, 1, Int>::from_data(
                         TensorData::from([(y as i64).elem::<B::IntElem>()]),
-                        &self.device,
+                        device,
                     )
                 } else {
                     panic!("Invalid target type")
@@ -82,7 +80,7 @@ impl<B: Backend> Batcher<ImageDatasetItem, ClassificationBatch<B>> for Classific
             .into_iter()
             .map(|item| TensorData::new(image_as_vec_u8(item), Shape::new([32, 32, 3])))
             .map(|data| {
-                Tensor::<B, 3>::from_data(data.convert::<B::FloatElem>(), &self.device)
+                Tensor::<B, 3>::from_data(data.convert::<B::FloatElem>(), device)
                     // permute(2, 0, 1)
                     .swap_dims(2, 1) // [H, C, W]
                     .swap_dims(1, 0) // [C, H, W]

@@ -179,10 +179,10 @@ pub struct ClassificationInferenceBatch<B: Backend> {
     pub mask_pad: Tensor<B, 2, Bool>,
 }
 
-impl<B: Backend> Batcher<ClassificationItem, ClassificationTrainingBatch<B>>
+impl<B: Backend> Batcher<B, ClassificationItem, ClassificationTrainingBatch<B>>
     for ClassificationBatcher<B>
 {
-    fn batch(&self, items: Vec<ClassificationItem>) -> ClassificationTrainingBatch<B> {
+    fn batch(&self, items: Vec<ClassificationItem>, _device: &B::Device) -> ClassificationTrainingBatch<B> {
         let mut tokens_list = Vec::with_capacity(items.len());
         let mut labels_list = Vec::with_capacity(items.len());
 
@@ -209,8 +209,8 @@ impl<B: Backend> Batcher<ClassificationItem, ClassificationTrainingBatch<B>>
     }
 }
 
-impl<B: Backend> Batcher<String, ClassificationInferenceBatch<B>> for ClassificationBatcher<B> {
-    fn batch(&self, items: Vec<String>) -> ClassificationInferenceBatch<B> {
+impl<B: Backend> Batcher<B, String, ClassificationInferenceBatch<B>> for ClassificationBatcher<B> {
+    fn batch(&self, items: Vec<String>, _device: &B::Device) -> ClassificationInferenceBatch<B> {
         let mut tokens_list = Vec::with_capacity(items.len());
 
         for item in items {
@@ -221,12 +221,12 @@ impl<B: Backend> Batcher<String, ClassificationInferenceBatch<B>> for Classifica
             self.tokenizer.pad_token(),
             tokens_list,
             Some(self.max_seq_length),
-            &B::Device::default(),
+            &self.device,
         );
 
         ClassificationInferenceBatch {
-            tokens: mask.tensor.to_device(&self.device),
-            mask_pad: mask.mask.to_device(&self.device),
+            tokens: mask.tensor,
+            mask_pad: mask.mask,
         }
     }
 }

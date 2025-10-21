@@ -122,8 +122,8 @@ impl<B: Backend> IrisBatcher<B> {
     }
 }
 
-impl<B: Backend> Batcher<IrisItem, IrisBatch<B>> for IrisBatcher<B> {
-    fn batch(&self, items: Vec<IrisItem>) -> IrisBatch<B> {
+impl<B: Backend> Batcher<B, IrisItem, IrisBatch<B>> for IrisBatcher<B> {
+    fn batch(&self, items: Vec<IrisItem>, _device: &B::Device) -> IrisBatch<B> {
         let mut inputs: Vec<Tensor<B, 2>> = Vec::new();
 
         for item in items.iter() {

@@ -152,8 +152,8 @@ impl<B: Backend> WineQualityBatcher<B> {
     }
 }
 
-impl<B: Backend> Batcher<WineQualityItem, WineQualityBatch<B>> for WineQualityBatcher<B> {
-    fn batch(&self, items: Vec<WineQualityItem>) -> WineQualityBatch<B> {
+impl<B: Backend> Batcher<B, WineQualityItem, WineQualityBatch<B>> for WineQualityBatcher<B> {
+    fn batch(&self, items: Vec<WineQualityItem>, _device: &B::Device) -> WineQualityBatch<B> {
         let mut inputs: Vec<Tensor<B, 2>> = Vec::new();
 
         // The constants are the min and max values of the dataset

@@ -199,7 +199,11 @@ pub struct ClassificationInferenceBatch<B: Backend> {
 impl<B: Backend> Batcher<B, ClassificationItem, ClassificationTrainingBatch<B>>
     for ClassificationBatcher<B>
 {
-    fn batch(&self, items: Vec<ClassificationItem>, _device: &B::Device) -> ClassificationTrainingBatch<B> {
+    fn batch(
+        &self,
+        items: Vec<ClassificationItem>,
+        _device: &B::Device,
+    ) -> ClassificationTrainingBatch<B> {
         let mut tokens_list = Vec::with_capacity(items.len());
         let mut labels_list = Vec::with_capacity(items.len());
 

@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 #[cfg(not(feature = "wgpu"))]
 mod ndarray {
     use burn::{

@@ -27,7 +27,7 @@ required-features = ["cocos"]
 
 
 [dependencies]
-burn = { version = "0.18.0", features = [
+burn = { version = "0.19.0", features = [
     "dataset",
     "fusion",
     "ndarray",
